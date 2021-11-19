@@ -78,9 +78,9 @@ class defaultModul(threading.Thread):
     def shutDownModul(self):
         '''
         
-        shutdown gateway
+        shutdown modul
         
-        exception: gatewayException
+        exception: defaultEXC
         
         '''
         try:
