@@ -125,5 +125,5 @@ class defaultModul(threading.Thread):
             else:
                 LOG.info("modul %s is shutdown, is  defaultGateway"%(self.config['objectID']))
         except:
-            LOG.critical("gateway %s is stop with error"%(self.config['objectID']),True)
+            LOG.critical("modul %s is stop with error"%(self.config['objectID']),True)
     
