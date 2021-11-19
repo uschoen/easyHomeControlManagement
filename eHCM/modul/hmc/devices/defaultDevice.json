@@ -1,0 +1,11 @@
+{
+    "CFGVersion": "7.0",
+    "channels": {},
+    "date": 1608797201,
+    "parameter": {
+    	"devicePackage": "hmc",
+        "deviceType": "defaultDevice",
+        "enable": true
+    },
+    "events":{}
+}

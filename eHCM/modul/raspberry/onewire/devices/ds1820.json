@@ -1,0 +1,14 @@
+{
+    "CFGVersion": "8.0",
+    "date": 1609713154,
+    "events": {},
+    "parameter": {
+    	"enable": true
+    	},
+    "channels": {
+            "temperature": {
+                "channelPackage": "raspberry.onewire",
+                "channelType": "temperature"}
+                }
+    
+}

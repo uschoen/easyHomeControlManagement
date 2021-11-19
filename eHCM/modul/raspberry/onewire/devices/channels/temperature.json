@@ -1,0 +1,13 @@
+{
+    "CFGVersion": "8.0",
+    "channelPackage": "raspberry.onewire",
+    "channelType": "temperature",
+    "events": {},
+    "name": "temperature",
+    "parameter": {
+    	"currency":"C",
+    	"offset":0,
+    	"value":0,
+    	"enable": true
+    	}
+}
