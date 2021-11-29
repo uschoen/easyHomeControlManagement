@@ -1,11 +1,14 @@
 '''
-Created on 01.12.2018
+Created on 01.12.2021
 
 @author: uschoen
+
+default modul
+
 '''
 
 
-__version__='8.0'
+__version__='0.9'
 __author__ = 'ullrich schoen'
 
 # Standard library imports
@@ -30,17 +33,24 @@ class defaultModul(threading.Thread):
         Constructor
         '''
         threading.Thread.__init__(self)
+        
+        """ core instance """
         self.core=coreManager()
+        
+        """ default config """
         self.config={
                         'enable':False,
-                        'objectID':"unkown"
+                        'objectID':objectID
                       }
         self.config.update(modulCFG)
-        ''' gateway running '''
+        self.config['objectID']=objectID
+        
+        """ modul running """
         self.running=False
         
+        """ modul shutdown """
         self.ifShutdown=True
-        ''' core instance '''
+        
         LOG.debug("build default modul %s instance, version %s"%(__name__,__version__))
         
     def stopModul(self):
@@ -68,9 +78,9 @@ class defaultModul(threading.Thread):
     def shutDownModul(self):
         '''
         
-        shutdown gateway
+        shutdown modul
         
-        exception: gatewayException
+        exception: defaultEXC
         
         '''
         try:
@@ -82,16 +92,12 @@ class defaultModul(threading.Thread):
             raise defaultEXC("can't shutdown modul %s"%(self.config['objectID']))
                
     def getConfiguration(self):
+        """
+        return the config from the modul
+        
+        return: dic
+        """
         return self.config
-    
-    def callBack(self,objectID,*args):
-        '''
-        '
-        ' dummy callBack
-        '
-        '''
-        LOG.error("modul %s have no callBack. Callback init by onjectID:%s"%(self.config['objectID'],objectID))
-        return
     
     def run(self):
         '''
@@ -112,9 +118,12 @@ class defaultModul(threading.Thread):
                         pass
                         self.stop()
                     time.sleep(0.5)
-                ''' shutdown '''    
-                time.sleep(0.5)
-            LOG.info("gateway %s is shutdown, is  defaultGateway"%(self.config['objectID']))
+                else:
+                    ''' shutdown '''  
+                    LOG.info("modul %s is stop, is  defaultGateway"%(self.config['objectID']))
+                time.sleep(1)
+            else:
+                LOG.info("modul %s is shutdown, is  defaultGateway"%(self.config['objectID']))
         except:
-            LOG.error("gateway %s is stop with error"%(self.config['objectID']))
+            LOG.critical("modul %s is stop with error"%(self.config['objectID']),True)
     

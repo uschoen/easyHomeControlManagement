@@ -1,5 +1,5 @@
 '''
-Created on 01.12.2018
+Created on 01.12.2021
 
 @author: uschoen
 '''
@@ -13,8 +13,25 @@ to retrive the iseID from the Homematic use:
 
 Systemvariablen:
 http://IpOfTheHomematic/addons/xmlapi/sysvarlist.cgi       
+Response:
 <systemVariable name="test" variable="0.000000" value="0.000000" value_list="" ise_id="44628" min="0" max="65000" unit="C" type="4" subtype="0" logged="false" visible="true" timestamp="1634145058" 
- 
+
+xml_api(objectID,modulCFG)
+
+objectID="name"
+modulCFG:{
+            "hmHost":"http://127.0.0.1",            #url CCU3
+            "https":False,                          #use https ?
+            "url":"/config/xmlapi/statechange.cgi", #url path
+            "blockConnector":30                     #block time if error
+         }
+xml_api.updateHMDevice(iseID,value)
+
+iseID="ise_id from the device"
+value="valu to set"
+
+return: nothing
+exception: all errors defaultEXC
 
 '''
 
@@ -78,13 +95,13 @@ class xml_api(defaultModul):
                 if "changed" in HMresponse['result']: 
                     LOG.debug("value successful change")
                 elif "not_found" in HMresponse['result']: 
-                    LOG.error("can not found iseID %s"%(iseID))
+                    raise defaultEXC("can not found iseID %s"%(iseID))
                 else:
-                    LOG.warning("get some unkown answer %s"%(response.data))
+                    raise defaultEXC("get some unkown answer %s"%(response.data))
             else:
-                LOG.warning("get some unkown answer %s"%(response.data)) 
+                raise defaultEXC("get some unkown answer %s"%(response.data)) 
         
-         
+            
         except:
             LOG.critical("some error in xml_api")
             raise defaultEXC("can't update homematic, some error")

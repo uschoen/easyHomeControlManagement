@@ -199,17 +199,18 @@ class praraphser():
             if not modulName in self.core.module:
                 raise cmdError("modul %s is not existing"%(modulName))
             
-            if (self.cfg['test']):
-                LOG.debug("test enable, call core modul:%s function:%s args:%s"%(modulName,callerFunction,arguments))
-            else:
-                
-                
-                if "arguments" in strg:
-                    # agruments [optional]
-                    arguments={'arguments':strg.get('arguments')}
-                    arguments=self.__loop(arguments,cmd)
+            if "arguments" in strg:
+                # agruments [optional]
+                arguments={'arguments':strg.get('arguments')}
+                arguments=self.__loop(arguments,cmd)
+                if (self.cfg['test']):
+                    LOG.debug("test enable, call core modul:%s function:%s args:%s"%(modulName,callerFunction,arguments))
+                else:
                     LOG.debug("call core modul:%s function:%s args:%s"%(modulName,callerFunction,arguments))
                     value=getattr(self.core.module[modulName]['instance'], callerFunction)(**arguments)
+            else:
+                if (self.cfg['test']):
+                    LOG.debug("test enable, call core modul:%s function:%s args:%s"%(modulName,callerFunction,arguments))
                 else:
                     LOG.debug("call core modul:%s function:%s"%(modulName,callerFunction))
                     value=getattr(self.core.module[modulName]['instance'], callerFunction)()

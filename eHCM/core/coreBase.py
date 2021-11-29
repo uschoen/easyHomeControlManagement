@@ -40,6 +40,13 @@ class coreBase():
         '''
         self.host=socket.gethostbyaddr(socket.gethostname())[0]
         
+        '''
+        self._ip: local ip adress 
+        
+        retrive with cor.getLocalIP()
+        '''
+        self.__localIP=None
+        
         LOG.info("init core base finish, version %s"%(__version__))
     
     def thisMethode(self):
@@ -51,6 +58,25 @@ class coreBase():
         except:
             LOG.error("some error in thisMethode")
     
+    def getLocalIP(self):
+        """
+        get the local ip back
+        
+        return :string
+        
+        excepton: ndefaultEXC
+        """
+        try:
+            if self.__localIP==None:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect(('8.8.8.8', 9))
+                self.__localIP = s.getsockname()[0]
+            return self.__localIP
+        except (socket.error) as e:
+            raise defaultEXC("socket error in getLocalIP %e"%(e))
+        except:
+            raise defaultEXC("unkown error in getLocalIP",True)
+        
     def loadModul(self,objectID,packageName,className,classCFG):
         '''
         load python pakage/module
