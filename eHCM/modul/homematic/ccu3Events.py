@@ -73,7 +73,7 @@ DEFAULT_CFG={
     }
 LOOP_SLEEP=1
 
-class ccu3(defaultModul):
+class ccu3Events(defaultModul):
     '''
     classdocs
     '''
@@ -316,15 +316,29 @@ class ccu3(defaultModul):
             self.__rpcServer=False
             LOG.critical("unkown error in stopRPCServer %s"%(self.config['objectID']),True)
     
-   
-    def __newDevice(self,hmcSerial,deviceType,parameters={}):
-        """ 
-        add a ne device to cor
-        
-        vars:
-        hmcSerial,deviceType,parameters={}
+    def resetAllTimer(self):
         """
-        pass
-         
+        stop both timer 
         
-            
+        stop timer HmMessages and restartRPC timer
+        """
+        self.__resetHmMessagesTimer()
+        self.__resetRestartRPCTimer()
+    
+    def __blockServer(self):
+        '''
+        block the server for new connections
+        '''
+        try:
+            LOG.error("block server %s for %s sec"%(self.config['objectID'],self.config['blockRPCServer']))
+            self.__blockTime=self.config['blockRPCServer']+int(time())
+        except:
+            raise defaultEXC("some unkown error in block server %s"%(self.config['objectID']),True)
+           
+    def __resetHmMessagesTimer(self):
+        self.__timerHmWakeUP=self.config['MSGtimeout']+int(time()) 
+    
+    def __resetRestartRPCTimer(self):
+        self.__timerRestartRPC=self.config['MSGtimeout']+int(time())+5
+        
+    

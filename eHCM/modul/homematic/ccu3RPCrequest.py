@@ -28,7 +28,7 @@ class ccu3RPCrequest(defaultModul):
     '''
     classdocs
     '''
-    def __init__(self,cfg,resetTimer):
+    def __init__(self,cfg,ccu3):
         """
         init
         """
@@ -43,7 +43,9 @@ class ccu3RPCrequest(defaultModul):
         self.config.update(cfg)
         
         ''' reset timer function '''
-        self.__resetTimer=resetTimer
+        self.__resetTimer=ccu3.resetAllTimer()
+        
+        
 
         LOG.debug("init new ccu3RPCrequest version %s"%(__version__))
         
@@ -54,7 +56,8 @@ class ccu3RPCrequest(defaultModul):
         """
         try:
             LOG.debug("event methode")
-            self.__resetTimer()
+            print("event %s %s %s %s %s "%(interfaceID,deviceNumber,channelName,value,unkown))
+            self.__resetTimer
         except:
             LOG.critical("unkown errer in ccu3RPCrequest/event methode",exc_info=True) 
     
@@ -64,10 +67,10 @@ class ccu3RPCrequest(defaultModul):
         """
         try:
             LOG.debug("listMethods methode")
-            self.__resetTimer()
+            self.__resetTimer
+            return True
         except:
             LOG.critical("unkown errer in ccu3RPCrequest/listMethods methode",exc_info=True) 
-    
     
     def listDevices(self,*args):
         """
@@ -75,6 +78,8 @@ class ccu3RPCrequest(defaultModul):
         """
         try:
             LOG.debug("listDevices methode")
+            print("listdevices %s"%(args))
+            
         except:
             LOG.critical("unkown errer in ccu3RPCrequest/listDevices methode",exc_info=True) 
     
@@ -84,9 +89,13 @@ class ccu3RPCrequest(defaultModul):
         """
         try:
             LOG.debug("newDevices methode")
-            self.__resetTimer()
+            self.__resetTimer
+            return True
         except:
             LOG.critical("unkown errer in ccu3RPCrequest/newDevices methode",exc_info=True) 
+    def getVersion(self,version):
+            LOG.debug("getVersion methode %s"%(version))
+            return True
             
     def deleteDevices(self, interface_id, addresses):
         """
@@ -94,7 +103,8 @@ class ccu3RPCrequest(defaultModul):
         """
         try:
             LOG.debug("deleteDevices methode")
-            self.__resetTimer()
+            self.__resetTimer
+            return True
         except:
             LOG.critical("unkown errer in ccu3RPCrequest/deleteDevices methode",exc_info=True) 
         
@@ -104,7 +114,8 @@ class ccu3RPCrequest(defaultModul):
         """
         try:
             LOG.debug("updateDevice methode")
-            self.__resetTimer()
+            self.__resetTimer
+            return True
         except:
             LOG.critical("unkown errer in ccu3RPCrequest/updateDevice methode",exc_info=True) 
          
@@ -114,7 +125,8 @@ class ccu3RPCrequest(defaultModul):
         """
         try:
             LOG.debug("readdedDevice methode")
-            self.__resetTimer()
+            self.__resetTimer
+            return True
         except:
             LOG.critical("unkown errer in ccu3RPCrequest/readdedDevice methode",exc_info=True) 
         
@@ -124,6 +136,7 @@ class ccu3RPCrequest(defaultModul):
         """
         try:
             LOG.debug("readdedDevice methode")
-            self.__resetTimer()
+            self.__resetTimer
+            return True
         except:
             LOG.critical("unkown errer in ccu3RPCrequest/readdedDevice methode",exc_info=True) 
