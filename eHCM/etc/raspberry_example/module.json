@@ -1,1 +1,7 @@
-{}
+{  "name@server_name": {
+        "config": {"...modul configuration"},
+        "enable": true,
+        "modulClass": "class of the modul",
+        "modulPackage": "name of the modul",
+        "startable": true
+}
