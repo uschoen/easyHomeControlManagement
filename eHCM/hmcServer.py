@@ -19,7 +19,7 @@ __version__='0.9'
 __author__ = 'ullrich schoen'
 __PYTHONVERSION__=(3,2,3)
 __LOGLEVEL__="DEBUG"
-logType="simple" # simple or colored
+logType="colored" # simple or colored
 
 
 # Standard library imports
