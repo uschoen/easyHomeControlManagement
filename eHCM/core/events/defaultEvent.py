@@ -180,8 +180,8 @@ class defaultEvent(object):
                     callerArgs=self.callers[caller]
                     LOG.debug("executeCaller %s with arg: %s"%(caller,callerArgs))
                     self.executeCaller(callerArgs,callerObject)
-                except:
-                    LOG.error("can't execute caller %s"%(caller))
+                except (Exception) as e:
+                    LOG.error("can't execute caller %s :%s"%(caller,e.msg))
         except:
             raise eventError("some error in callCallers",True)    
     
@@ -208,6 +208,7 @@ class defaultEvent(object):
         
         try:
             methodToCall(**arguments)
+            
         except (Exception) as e:
             raise eventError("can't call function %s: (%s) error: %s"%(args.get('callFunction',"unkown"),arguments,e.msg))
     

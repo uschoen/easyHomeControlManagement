@@ -100,7 +100,7 @@ class mysqlManager(defaultModul,object):
         exception: NONE
         '''
         try:
-            LOG.debug("call update from MysqlMapper witha rgs %s"%(values))
+            LOG.debug("call update from MysqlMapper with args %s"%(values))
             self.__callerARGS.update(values)
             
                 
@@ -245,7 +245,7 @@ class mysqlManager(defaultModul,object):
         '''
         try:
             if value not in self.__callerARGS:
-                raise defaultEXC ("can't find % in callerVars"%(value))
+                raise defaultEXC ("can't find %s in callerVars"%(value))
             return self.__callerARGS[value]
         except (defaultEXC) as e:
             raise e
