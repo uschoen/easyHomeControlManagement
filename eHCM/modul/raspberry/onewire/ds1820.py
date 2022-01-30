@@ -80,6 +80,8 @@ class ds1820(defaultModul):
         self.__LastReadSenors=0
         # have any sensor change
         self.SensorsHaveChange=False
+        #
+        self.__orginalIntervall=self.config["interval"]
         LOG.info("build ds1820 modul, %s instance"%(__name__))               
 
     '''
@@ -102,8 +104,8 @@ class ds1820(defaultModul):
                                         self.__readSensors(sensorID)
                                     except (defaultEXC,Exception) as e:
                                         LOG.error("some error in read ds1820 sensors:%s: %s"%(sensorID,format(e)))
-                                if self.config["autoInterval"]:
-                                    self.__calcAutoIntervall()
+                                
+                                self.__calcAutoIntervall()
                                 self.__LastReadSenors=int(time.time())+self.config["interval"]
                         time.sleep(0.5)
                     except:
@@ -115,18 +117,52 @@ class ds1820(defaultModul):
             LOG.error("some error in raspberry onewire modul. modul stop")
     
     def __calcAutoIntervall(self):
+        '''
+        calculate the intervalto read the sensor
+        
+        use 
+            self.config["autoInterval" false/return, true/calc new interval
+            self.SensorsHaveChange fals add +0.5 true/calc new value 
+            self.__orginalIntervall    store the orginal intervall
+            self.config["interval"]    actual Interval
+        
+        exception: none catch all errors
+        
+        return :
+        
+        '''
+        
         try:
-            if self.SensorsHaveChange and self.config["interval"]>1:
-                self.config["interval"]=self.config["interval"]-0.5
-                LOG.debug("sensor is change, set interval (-0.5) to: %ss"%(self.config["interval"]))
+            if not self.config["autoInterval"]:
+                return
+            if self.SensorsHaveChange:
+                '''
+                one of the sensors are change
+                '''
+                if self.config["interval"]>self.__orginalIntervall:
+                    '''
+                    some change and actual interfall is grader then orginal interval
+                    '''
+                    self.config["interval"]=self.__orginalIntervall
+                else:
+                    '''
+                    some change and aktual inerval is lower then orginal interval
+                    '''
+                    if self.SensorsHaveChange and self.config["interval"]>1:
+                        self.config["interval"]=self.config["interval"]-0.5     
             else:
+                '''
+                no change of one of the sensors
+                '''
                 self.config["interval"]=self.config["interval"]+0.5
                 LOG.debug("no change for a sensor set interval (+0.5) to: %ss"%(self.config["interval"]))
-            self.SensorsHaveChange=False
+        
+            LOG.debug("sensor is change, set interval (-0.5) to: %ss"%(self.config["interval"]))
+            self.SensorsHaveChange=False    
         except (Exception) as e:
             self.SensorsHaveChange=False
             LOG.error("can't calculate autointervall %s"%(e))
-    
+
     def __readSensors(self,sensorID):
         try:
             deviceID=self.__deviceID(sensorID)
