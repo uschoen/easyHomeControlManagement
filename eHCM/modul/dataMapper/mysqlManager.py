@@ -25,7 +25,6 @@ try:
     from mysql.connector import errorcode                                          #@UnresolvedImport,@UnusedImport
 except:
     raise defaultEXC("no mysql.connector module installed")
-import time
 
 # Local apllication constant
 LOG=logging.getLogger(__name__)
@@ -246,7 +245,7 @@ class mysqlManager(defaultModul,object):
         '''
         try:
             if value not in self.__callerARGS:
-                raise defautEXC ("can't find % in callerVars"%(value))
+                raise defaultEXC ("can't find % in callerVars"%(value))
             return self.__callerARGS[value]
         except (defaultEXC) as e:
             raise e
