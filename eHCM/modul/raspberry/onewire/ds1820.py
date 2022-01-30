@@ -135,6 +135,7 @@ class ds1820(defaultModul):
         try:
             if not self.config["autoInterval"]:
                 return
+            oldValue=self.config["interval"]
             if self.SensorsHaveChange:
                 '''
                 one of the sensors are change
@@ -155,9 +156,9 @@ class ds1820(defaultModul):
                 no change of one of the sensors
                 '''
                 self.config["interval"]=self.config["interval"]+0.5
-                LOG.debug("no change for a sensor set interval (+0.5) to: %ss"%(self.config["interval"]))
+                
         
-            LOG.debug("sensor is change, set interval (-0.5) to: %ss"%(self.config["interval"]))
+            LOG.debug("set interval from %s s to %s s"%(oldValue,self.config["interval"]))
             self.SensorsHaveChange=False    
         except (Exception) as e:
             self.SensorsHaveChange=False
