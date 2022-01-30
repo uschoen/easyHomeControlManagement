@@ -186,6 +186,17 @@ class defaultEvent(object):
             raise eventError("some error in callCallers",True)    
     
     def executeCaller(self,args,callerObject={}):
+        '''
+        call a internal function in the core with args
+        
+        dict args={
+                    "callFuntion":funktion name,
+                    "args": arguments
+                  }
+        object callerObject: the object have init the event
+        
+        exception eventError        
+        '''
         try:
             LOG.debug("call function %s"%(args.get('callFunction',"unkown")))
             methodToCall = getattr(self.core,args['callFunction'])
