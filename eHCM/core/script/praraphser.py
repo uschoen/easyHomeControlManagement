@@ -471,7 +471,6 @@ class praraphser():
         return: dic
         """
         try:
-            print (strg)
             arguments={}
             for argsKeys in strg:
                 arguments[argsKeys]=self.__loop(strg[argsKeys], "arguments")
