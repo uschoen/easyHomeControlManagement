@@ -6,8 +6,8 @@ Created on 01.12.2021
 
 '''
 install python package xmltodict
-use:
- pip3 install xmltodict
+use (Imported ! do this als root or with sudo):
+ sudo pip3 install xmltodict
  
 to retrive the iseID from the Homematic use:
 
