@@ -45,6 +45,11 @@ class coreModule():
                 "from":int(time.time())
             }
             for modulName in self.module:
+                '''
+                @todo: if modul loading faild you can not retrive the Configuartion of the modul
+                via getConfiguration, because no intance is avaibel.
+                change this 
+                '''
                 modulCFG[modulName]={
                             "startable":self.module[modulName].get('startable',False),
                             "enable":self.module[modulName].get('enable',False),
