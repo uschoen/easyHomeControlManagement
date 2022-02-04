@@ -33,7 +33,7 @@ class coreBase():
         '''
         script absolut root path
         '''
-        self.rootPath=("%s/%s"%(os.path.dirname(sys.argv[0])))
+        self.rootPath=("%s"%(os.path.dirname(sys.argv[0])))
         '''
         self.host: the self host name
         '''
