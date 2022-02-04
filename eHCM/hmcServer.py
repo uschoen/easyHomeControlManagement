@@ -40,7 +40,7 @@ set logging configuration
 '''
 if logType=="colored":
     try:
-        import coloredlogs
+        import coloredlogs              #@UnresolvedImport
         coloredlogs.DEFAULT_FIELD_STYLES = {'asctime': {'color': 'green'}, 'hostname': {'color': 'magenta'}, 'levelname': {'color': 'black', 'bold': True}, 'name': {'color': 'blue'}, 'programname': {'color': 'cyan'}}
         coloredlogs.DEFAULT_LEVEL_STYLES = {'critical': {'color': 'red', 'bold': True}, 'debug': {'color': 'green'}, 'error': {'color': 'red'}, 'info': {}, 'notice': {'color': 'magenta'}, 'spam': {'color': 'green', 'faint': True}, 'success': {'color': 'green', 'bold': True}, 'verbose': {'color': 'blue'}, 'warning': {'color': 'yellow'}}
         coloredlogs.install(level=__LOGLEVEL__,milliseconds=True,fmt='%(msecs)03d %(name)30s[%(process)d] %(lineno)04d %(levelname)8s %(message)s')
