@@ -22,7 +22,8 @@ configuration file
             "name": "onewire@rasp-heizung",
             "path": "/sys/bus/w1/devices/",
             "timeout": 60,
-            "tolerance": 0.2
+            "tolerance": 0.2,
+            "forceUpdate": true
         }
         
 '''
@@ -54,7 +55,8 @@ DEFAULT_CFG={
                         "blockConnector":30,
                         "autoInterval":True,
                         'gatewayName':"unkown",
-                        'enable':False
+                        'enable':False,
+                        'forceUpdate': True
                         }
 
 DEFAULT_CHANNEL_NAME="temperature"
@@ -229,13 +231,28 @@ class ds1820(defaultModul):
             tempDiv=float(self.config["tolerance"])
             LOG.debug("sensorID:%s old value:%s new value:%s tolerance:%s"%(sensorID,lastValue,value,tempDiv))
             
+            actualSensorChange=False
             if (lastValue < (value-tempDiv)) or (lastValue >(value+tempDiv)):
                 LOG.debug("temperature is change, update device channel temperature") 
-                self.core.setDeviceChannelValue(self.__deviceID(sensorID),DEFAULT_CHANNEL_NAME,value)
-                LOG.debug("update for deviceID %s success"%(self.__deviceID(sensorID)))  
-                self.SensorsHaveChange=True                                 
+                actualSensorChange=True                                 
             else:
                 LOG.debug("temperature is not change")
+                
+            if self.config['forceUpdate']:
+                ''' 
+                forceUpdate from core is set
+                '''
+                self.core.setDeviceChannelValue(self.__deviceID(sensorID),DEFAULT_CHANNEL_NAME,value)
+                LOG.debug("update for deviceID %s success"%(self.__deviceID(sensorID)))
+            else:
+                '''
+                forceUpdateis false
+                '''
+                if actualSensorChange:
+                    self.core.setDeviceChannelValue(self.__deviceID(sensorID),DEFAULT_CHANNEL_NAME,value)
+                    LOG.debug("update for deviceID %s success"%(self.__deviceID(sensorID)))
+                    self.SensorsHaveChange=True 
+            
         except:    
             raise defaultEXC("can not update sensorID %s"%(sensorID)) 
     
