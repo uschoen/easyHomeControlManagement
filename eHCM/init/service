@@ -1,0 +1,63 @@
+https://gist.github.com/emxsys/a507f3cad928e66f6410e7ac28e2990f
+
+
+mnt-nas01-entwicklung.mount 
+
+Service for the Script
+
+Now we're going to define the service to run this script:
+
+cd /lib/systemd/system/
+sudo nano eHMC.service
+
+The service definition must be on the /lib/systemd/system folder. Our service is going to be called "eHMC.service":
+
+
+[Unit]
+Description=eHMC Service
+After=multi-user.target[Service]
+After=mnt-nas01-entwicklung.mount	#Wait for nfs mount ...
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /mnt/nas01/entwicklung/easyHomeControlManagement/eHCM/hmcServer.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+
+Here we are creating a very simple service that runs our hello_world script and if by any means is aborted is going to be restarted automatically. You can check more on service's options in the next wiki: https://wiki.archlinux.org/index.php/systemd.
+
+Now that we have our service we need to activate it:
+
+sudo chmod 644 /lib/systemd/system/eHMC.service
+chmod +x /mnt/nas01/entwicklung/easyHomeControlManagement/eHCM/hmcServer.py
+sudo systemctl daemon-reload
+sudo systemctl enable eHMC.service
+sudo systemctl start eHMC.service
+
+Service Tasks
+
+For every change that we do on the /lib/systemd/system folder we need to execute a daemon-reload (third line of previous code). If we want to check the status of our service, you can execute:
+
+sudo systemctl status hello.service
+
+In general:
+Check status
+
+sudo systemctl status eHMC.service
+Start service
+
+sudo systemctl start eHMC.service
+Stop service
+
+sudo systemctl stop eHMC.service
+Check service's log
+
+sudo journalctl -f -u eHMC.service
+REFERENCES
+
+    https://wiki.archlinux.org/index.php/systemd
+    https://www.digitalocean.com/community/tutorials/understanding-systemd-units-and-unit-files
+    https://coreos.com/os/docs/latest/getting-started-with-systemd.html
