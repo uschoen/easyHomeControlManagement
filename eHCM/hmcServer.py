@@ -19,7 +19,6 @@ __version__='0.9'
 __author__ = 'ullrich schoen'
 __PYTHONVERSION__=(3,2,3)
 __LOGLEVEL__="DEBUG"
-logType="simple" # simple or colored
 
 
 # Standard library imports
@@ -32,6 +31,31 @@ import logging.config
 # local library import
 from core.manager import manager as coreManager
 
+
+
+'''
+######################################################
+start arguments
+######################################################
+@todo: test start arguments
+'''    
+configFile=None
+daemon=False
+coreServer=False
+logType="simple" # simple or colored
+
+try:
+    parser = argparse.ArgumentParser(description='hmcServer help interface')
+    parser.add_argument('--configfile','-c',help="full path of the configuration file",action="store", dest="configfile",default=None)
+    parser.add_argument('--daemon','-d',help="start hmc as daemon, default true",action="store", dest="daemon",default=True) 
+    parser.add_argument('--logType','-lt',help="type of the logs, default simple or use colored",action="store", dest="logType",default="simple") 
+except:
+    print("you forget some start arguments. Use -h help option"%(sys.version_info))
+    sys.exit(0)
+args = parser.parse_args()
+configFile=args.configfile
+daemon=args.daemon
+logType=args.logType
 
 ''' 
 ######################################################
@@ -104,25 +128,7 @@ for i in [x for x in dir(signal) if x.startswith("SIG")]:
         LOG.info("skip signal handler signal.%s, ot catchable"%(i)) 
 
 
-'''
-######################################################
-start arguments
-######################################################
-@todo: test start arguments
-'''    
-configFile=None
-daemon=False
-coreServer=False
-try:
-    parser = argparse.ArgumentParser(description='hmcServer help interface')
-    parser.add_argument('--configfile','-c',help="full path of the configuration file",action="store", dest="configfile",default=None)
-    parser.add_argument('--daemon','-d',help="start hmc as daemon, default true",action="store", dest="daemon",default=False) 
-except:
-    print("you forget some start arguments. Use -h help option"%(sys.version_info))
-    sys.exit(0)
-args = parser.parse_args()
-configFile=args.configfile
-daemon=args.daemon
+
 
 '''
 ######################################################
