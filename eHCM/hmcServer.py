@@ -19,7 +19,7 @@ __version__='0.9'
 __author__ = 'ullrich schoen'
 __PYTHONVERSION__=(3,2,3)
 __LOGLEVEL__="DEBUG"
-
+IGNORE_SIGNAL=("SIGWINCH")
 
 # Standard library imports
 import sys
@@ -112,22 +112,31 @@ LOG.info("start hmcServer on python version %s.%s.%s"%(sys.version_info[0],sys.v
 set signal handler
 ######################################################
 '''
-ALL_SIGNALS= dict((getattr(signal, n), n) \
-    for n in dir(signal) if n.startswith('SIG') and '_' not in n )
 
+
+''' 
+    methode for signal handling
+'''
 def signal_handler(signum, frame):
     LOG.critical("Signal handler called with signal:%s frame:%s"%(signum,frame))
     sys.exit()
 
 LOG.debug("set up signal handler ") 
-for i in [x for x in dir(signal) if x.startswith("SIG")]:
+for signalName in [x for x in dir(signal) if x.startswith("SIG")]:
     try:
-        signum = getattr(signal,i)
+        '''
+        check all signal handler
+        '''
+        if signalName in IGNORE_SIGNAL:
+            '''
+            if signal in IGNORE_SIGNAL, ignore
+            '''
+            raise Exception
+        signum = getattr(signal,signalName)
         signal.signal(signum,signal_handler)
     except:
-        LOG.info("skip signal handler signal.%s, ot catchable"%(i)) 
-
-
+        LOG.info("skip signal handler signal.%s, ot catchable"%(signalName)) 
+ 
 
 
 '''
