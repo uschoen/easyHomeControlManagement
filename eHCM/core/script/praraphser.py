@@ -156,7 +156,7 @@ class praraphser():
             
             # type is string
             elif (type(script)== str):
-                LOG.debug("find type srcipt in loop, return value:%s"%(script))
+                LOG.debug("find type script in loop, return value:%s"%(script))
                 value=script
             
             # type is unkown
@@ -169,7 +169,7 @@ class praraphser():
         except (cmdError) as e:
             LOG.critical("script error in script: %s"%(e))
         except (Exception) as e:
-            raise defaultError("unkoun errer in loop %s"%(e),True) 
+            raise defaultError("unkoun error in loop %s"%(e),True) 
     
     def __callModul(self,strg={},cmd="callModul"):
         """
