@@ -29,11 +29,10 @@ class coreBase():
         self.path: the absolute path of the script
         '''
         self.runPath='' if not os.path.dirname(sys.argv[0]) else '%s/'%(os.path.dirname(sys.argv[0]))
-        
         '''
         script absolut root path
         '''
-        self.rootPath=("%s/"%(os.path.dirname(sys.argv[0])))
+        self.rootPath="%s/"%(os.path.abspath(os.path.dirname(sys.argv[0])))
         '''
         self.host: the self host name
         '''
