@@ -189,6 +189,7 @@ class defaultChannel(eventManager,object):
             if value!=self.parameter['value']:
                 self.parameter['value']=value
                 self.events['onchange'].callCallers(self)
+                self.events['onrefresh'].callCallers(self)
             else:
                 self.parameter['value']=value
                 self.events['onrefresh'].callCallers(self) 
