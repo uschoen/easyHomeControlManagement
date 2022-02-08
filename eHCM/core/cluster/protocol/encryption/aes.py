@@ -5,6 +5,7 @@ Created on 01.12.2018
 (C):2018
 @author: ullrich schoen
 @email: uschoen.hmc(@)johjoh.de
+
 Requierment:pycrypto
 
 Install:pycrypto
@@ -17,17 +18,18 @@ or
     sudo pip-3.2 install pycrypto
 '''
 
-__version__='7.0'
+__version__='9.0'
 __author__ = 'ullrich schoen'
 
 # Standard library imports
-import pickle as cPickle                    #@UnresolvedImport 
+import pickle 
 import hashlib
 import os
 import logging
 from base64 import b64encode
+
 # Local application imports
-from .cryptException import cryptException
+from .exception import cryptException
 
 LOG=logging.getLogger(__name__)
 BS = 16
@@ -40,22 +42,22 @@ class aes(object):
           
         LOG.debug("init aes encryption, version %s"%(__version__))
 
-    def serialData(self,var):
+    def __serialData(self,var):
         '''
         serial data, from a json var to a string
         '''
         try:
-            serialData=cPickle.dumps(var)
+            serialData=pickle.dumps(var)
             return serialData
         except:
             raise cryptException("can't serial data",False)
     
-    def unSerialData(self,serialData):
+    def __unSerialData(self,serialData):
         '''
         unsiral data from a string to a jason var
         '''
         try:
-            unSerialData=cPickle.loads(serialData)
+            unSerialData=pickle.loads(serialData)
             return unSerialData 
         except:
             raise cryptException("can't unserial data",False)
@@ -67,7 +69,7 @@ class aes(object):
         try:
             LOG.info("use AES decryption")
             plaintext=self.__decrypt(cryptstring,key)
-            var=self.unSerialData(plaintext)
+            var=self.__unSerialData(plaintext)
             return var
         except:
             raise cryptException( "can not decrypt message",False)
@@ -79,7 +81,7 @@ class aes(object):
         '''
         try:
             LOG.info("use AES encryption")
-            plaintext=self.serialData(var)   
+            plaintext=self.__serialData(var)   
             string=self.__encrypt(plaintext, key)
             return string
         except:
