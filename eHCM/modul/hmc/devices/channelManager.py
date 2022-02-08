@@ -76,7 +76,7 @@ class channelManager():
         if channelName not in self.channels:
             raise defaultEXC("no channel  with %s extits"%(channelName))
         try:
-            return self.channels[channelName].setValue(value)
+            self.channels[channelName].setValue(value)
         except:
             raise defaultEXC("can't setValue for channel %s for deviceID:%s"%(channelName,self.deviceID)) 
     
