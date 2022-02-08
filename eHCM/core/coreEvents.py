@@ -65,10 +65,10 @@ class coreEvents():
             '''
             shutdown remote core
             '''
-            #try:
-            #    self._shutdownAllCluster()
-            #except (Exception) as e:
-            #    LOG.error("can't shutdown all cluster connecion MSG: %s"%(format(e)))
+            try:
+                self._shutdownAllCluster()
+            except (Exception) as e:
+                LOG.error("can't shutdown all cluster connecion MSG: %s"%(format(e)))
                 
             '''
             write Configuration
