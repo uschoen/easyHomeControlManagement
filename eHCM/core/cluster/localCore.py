@@ -19,7 +19,8 @@ from core.exception import defaultEXC
 
 DEFAULT_CFG={"blocked":60,
              "enable":False,
-             "port":9000}
+             "port":9000,
+             "protokolVersion":1}
 
 LOG=logging.getLogger(__name__) 
 
