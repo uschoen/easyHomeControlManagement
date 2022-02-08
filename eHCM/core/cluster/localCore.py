@@ -16,6 +16,8 @@ import socket
 
 # local library imports
 from core.exception import defaultEXC
+from .protocol.version1  import version1
+from .protocol.version2  import version2
 
 DEFAULT_CFG={"blocked":60,
              "enable":False,
@@ -65,6 +67,18 @@ class localCore(threading.Thread):
         '''
         self.running=self.__config['enable']
         
+        '''
+            add coreProtokoll version
+            default or wrong value, 1
+        '''
+        self.__coreProtocol={
+                        1:version1,
+                        2:version2
+                      }
+        if not self.__config['protokolVersion'] in self.__coreProtocol:
+            LOG.error("protokolVersion %s is not avaible option, set to verion 1"%(self.__config['protokolVersion']))
+            self.__config['protokolVersion']=1 
+            
         LOG.info("init new local core server %s version %s"%(self.coreName,__version__))
 
     def run(self):
