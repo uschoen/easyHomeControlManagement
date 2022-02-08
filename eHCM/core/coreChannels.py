@@ -31,9 +31,20 @@ class coreChannels():
     def addDeviceChannel(self,
                          objectID,
                          channelName,
-                         channelCFG={}
+                         channelCFG={},
+                         forceUpdate=False
                          ):
-        
+        '''
+            add a new device channel to the device
+            
+            objectID    deviceID how to add the channel
+            channelName channel name 
+            channelCFG  channel config as dic={}
+            forceUpdate true/false(default), update remote core even is device not on this host
+            
+            exception: defaultEXC
+            
+        '''
         if not self.ifDeviceIDExists(objectID):
             raise defaultEXC("deviceID %s is not exist"%(objectID),False)
         if self.devices[objectID].ifDeviceChannelExist(channelName):
@@ -41,6 +52,10 @@ class coreChannels():
         try:
             restore=False
             self.devices[objectID].addChannel(channelName,channelCFG,restore)
+            '''
+                update remote core
+            '''
+            self.updateRemoteCore(forceUpdate,objectID,self.thisMethode,objectID,channelName,channelCFG)
         except (Exception) as e:
             raise Exception("can't add channel %s msg:%s"%(channelName,e))   
     
@@ -83,11 +98,16 @@ class coreChannels():
     def setDeviceChannelValue(self,
                               objectID,
                               channelName,
-                              value):
+                              value,
+                              forceUpdate=False):
         if not self.ifDeviceIDExists(objectID):
             raise defaultEXC("deviceID %s is not exist"%(objectID),False)
         try: 
-            return self.devices[objectID].setChannelValue(channelName,value)
+            self.devices[objectID].setChannelValue(channelName,value)
+            '''
+                update remote core
+            '''
+            self.updateRemoteCore(forceUpdate,objectID,self.thisMethode,objectID,channelName,value)
         except:
             raise defaultEXC("can't setDeviceChannelValue  deviceID %s"%(objectID))
     

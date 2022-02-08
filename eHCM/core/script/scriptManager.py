@@ -145,7 +145,7 @@ class scriptManager():
         except:
             raise defaultError("can't read script configuration",True)
         
-    def runScript(self,scriptName,script=None,callerObject=None,callerVars={},programDeep=0):
+    def runScript(self,scriptName,script=None,callerObject=None,callerVars={},programDeep=0,forceUpdate):
         try:
             if self.ifonThisHost(scriptName):
                 LOG.debug("run script name: %s , with script: %s"%(scriptName,script))
@@ -166,6 +166,11 @@ class scriptManager():
                 return p
             else:
                 LOG.debug("script %s is not at this host %s"%(scriptName.self.host))
+                '''
+                update remote core
+                '''
+                self.updateRemoteCore(forceUpdate,scriptName,self.thisMethode,scriptName,script,callerObject,callerVars,programDeep)
+
         except (defaultError,cmdError,testError) as e:
             raise e
         except:
