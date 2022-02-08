@@ -78,11 +78,11 @@ class coreConfiguration():
             #########
             # cluster
             #########
-            #try:
-            #    fileNameABS="%s/%s"%(path,self.args['configuration']['files']['cluster'])
-            #    self._writeClusterConfiguration(fileNameABS)
-            #except:
-            #    LOG.error("can't write cluster configuration file %s"%(fileNameABS),exc_info=True)         
+            try:
+                fileNameABS="%s/%s"%(path,self.args['configuration']['files']['cluster'])
+                self._writeClusterConfiguration(fileNameABS)
+            except:
+                LOG.error("can't write cluster configuration file %s"%(fileNameABS),exc_info=True)         
         except:
             raise defaultEXC("some error, can't saveAllConfiguration to filesystem")
         
