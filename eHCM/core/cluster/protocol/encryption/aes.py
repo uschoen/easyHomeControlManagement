@@ -46,6 +46,7 @@ class aes(object):
         '''
         serial data, from a json var to a string
         '''
+        
         try:
             serialData=pickle.dumps(var)
             return serialData
@@ -56,6 +57,7 @@ class aes(object):
         '''
         unsiral data from a string to a jason var
         '''
+        
         try:
             unSerialData=pickle.loads(serialData)
             return unSerialData 
@@ -66,6 +68,7 @@ class aes(object):
         '''
         decrypt/entschluesseln a string
         '''
+        
         try:
             LOG.info("use AES decryption")
             plaintext=self.__decrypt(cryptstring,key)
@@ -79,6 +82,7 @@ class aes(object):
         '''
         encrypt/verschluesseln a var
         '''
+        
         try:
             LOG.info("use AES encryption")
             plaintext=self.serialData(var)   
@@ -105,6 +109,7 @@ class aes(object):
         ' string: is a plain string
         ' return: an decryptet string
         '''
+        
         try:
             from Crypto.Cipher import AES   #@UnresolvedImport 
             iv=self.__IVKey()
@@ -123,6 +128,7 @@ class aes(object):
         ' cryptstring: is a aes cryptedt string
         ' return: an encryptet string
         '''
+        
         try:
             from Crypto.Cipher import AES   #@UnresolvedImport 
             iv=cryptstring[:BS]

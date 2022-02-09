@@ -159,9 +159,9 @@ class remoteCore(threading.Thread):
         try:
             LOG.debug("work for queue to core %s"%(self.coreName))
             while not jobQueue.empty():
-                self.__remoteCoreprotocol.sendJob(networkSocket,jobQueue.get())
+                self.__remoteCoreProtocol.sendJob(networkSocket,jobQueue.get())
         except:
-            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode),True)
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode()),True)
     
     def __closeSocket(self,networkSocket,clientIP):
         ''' 
@@ -209,7 +209,7 @@ class remoteCore(threading.Thread):
         try:
             LOG.info("try to sync for core client %s"%(self.coreName))
             self.__clearCoreQueue()          
-            self.__clearsyncQueue()
+            self.__clearSyncQueue()
             self.__syncCoreModule()
             self.__syncCoreDevices()
             self.__syncCoreCluster()
@@ -222,8 +222,8 @@ class remoteCore(threading.Thread):
             self.__setCoreIsSync()
     
         except:
-            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode),True)
-    
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode()),True)
+        
     def __setCoreIsSync(self):
         '''
         '
@@ -235,23 +235,23 @@ class remoteCore(threading.Thread):
         LOG.info("core client to core %s is syncron"%(self.coreName))
         self.coreStatusSync=True
         
-    def __syncCoreClients(self):
+    def __syncCoreCluster(self):
         '''
         sync all core clients from this host
         '''
         try:
             LOG.info("sync core cluster to host %s"%(self.coreName))
-            for coreName in self.core.coreClients:
+            for coreName in self.core.coreCluster:
                 if not self.core.ifonThisHost(coreName):
                     continue
-                args=(coreName,self.core.coreClients[coreName]['config'])
+                args=(coreName,self.core.coreCluster[coreName]['config'])
                 updateObj={
                             'objectID':coreName,
                             'callFunction':'updateCoreConnector',
                             'args':args}
                 self.__syncQueue.put(updateObj)
         except:
-            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode),True)
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode()),True)
     
     
     def __syncCoreModule(self):
@@ -272,7 +272,7 @@ class remoteCore(threading.Thread):
                         'args':(objectID,self.core.getModulConfiguration(objectID))}
                 self.__syncQueue.put(updateObj)
         except:
-            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode),True)
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode()),True)
     
     def __syncCoreDevices(self):
         '''
@@ -292,7 +292,7 @@ class remoteCore(threading.Thread):
                         'args':args}
                 self.__syncQueue.put(updateObj)
         except:
-            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode),True)
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode()),True)
         
     def __clearCoreQueue(self):
         '''
@@ -305,7 +305,7 @@ class remoteCore(threading.Thread):
             LOG.info("clear core queue from %s"%(self.coreName))
             self.__coreQueue.queue.clear()
         except:
-            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode),True)
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode()),True)
     
     def __clearSyncQueue(self):
         '''
@@ -318,7 +318,7 @@ class remoteCore(threading.Thread):
             LOG.info("clear sync queue from %s"%(self.coreName))
             self.__syncQueue.queue.clear()
         except:
-            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode),True)
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode()),True)
         
     def stop(self):
         '''

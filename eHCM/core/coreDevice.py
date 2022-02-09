@@ -186,6 +186,21 @@ class coreDevices():
         except:
             raise defaultEXC("can't write device configuration: %s"%(deviceCFG),True) 
         
+    def getAllDeviceID(self):
+        '''
+            getAllDeviceID 
+           
+            get a list beck with all device ids
+            
+            return list with all device ids ("example1@host1.de","....")
+        
+            exception: defaultEXC
+        '''
+        try:
+            return self.devices.keys()
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode()),True)
+    
     def _loadDeviceConfiguration(self,fileNameABS):
         '''
         internal function to load the device configuration 

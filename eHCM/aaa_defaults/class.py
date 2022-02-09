@@ -32,7 +32,7 @@ def CLASSNAME(self,objectID,var_2,forceUpdate=False):
             pass
             self.updateRemoteCore(forceUpdate,objectID,self.thisMethode,objectID,var 2)
         except:
-            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode()),True)
 
 def CLASSNAME(self,objectID,var_2,forceUpdate=False):
         '''
@@ -53,4 +53,4 @@ def CLASSNAME(self,objectID,var_2,forceUpdate=False):
                 ''' 
             self.updateRemoteCore(forceUpdate,objectID,self.thisMethode,objectID,var 2)
         except:
-            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode()),True)

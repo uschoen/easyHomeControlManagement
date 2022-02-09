@@ -334,5 +334,3 @@ class version1:
             raise e
         except:
             raise protocolException("can't send result")     
-    
-   
