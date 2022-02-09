@@ -85,9 +85,9 @@ class coreCluster():
                 self.__deleteCoreConnector(objectID )
             self.__buildCoreConnector(objectID,connectorCFG)
             self.__startCoreConnector(objectID)
-            self.updateRemoteCore(forceUpdate,objectID,self.thisMethode,objectID,connectorCFG)
+            self.updateRemoteCore(forceUpdate,objectID,self.thisMethode(),objectID,connectorCFG)
         except:
-            raise defaultEXC("some unkown error in %s"%(self.thisMethode))
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode()))
     
     def ifKnownCoreClient(self,clientIP):
         '''
@@ -170,7 +170,7 @@ class coreCluster():
             
             
         except:
-            raise defaultEXC("some unkown error in %s"%(self.self.thisMethode))
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode()))
         
     def __shutdownCluster(self,objectID):
         '''
@@ -208,7 +208,7 @@ class coreCluster():
                 if self.coreCluster[objectID]['running']==True:
                     self.__stopClusterConnector(objectID)
                 if self.coreCluster[objectID]['shutdown']==False:
-                    self.__shutdownCoreConnector(objectID)
+                    self.__shutdownCluster(objectID)
                 del self.coreCluster[objectID]
             else:
                 LOG.error("can't find core connection %s to stop"%(objectID))
@@ -231,7 +231,7 @@ class coreCluster():
             self.__buildCoreConnector(objectID,connectorCFG)
             self.__startCoreConnector(objectID)
         except:
-            raise defaultEXC("some unkown error in %s"%(self.thisMethode))
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode()))
     
     def __startCoreConnector(self,objectID):
         '''

@@ -52,7 +52,7 @@ class coreBase():
         return the actule methode
         '''
         try:
-            return sys._getframe(1).f_code.co_name 
+            return sys._getframe(1).f_code.co_name
         except:
             LOG.error("some error in thisMethode")
     

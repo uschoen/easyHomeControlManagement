@@ -27,13 +27,16 @@ ENCRYPTION={
             "plain":plain
             }
 ALLOWED_FUNCTIONS={
-                    'updateCoreConnector'
+                    'updateCoreConnector',
+                    'setDeviceChannelValue',
+                    'restoreDevice'
                 }
 
-DEFAULT_CFG={"debug":True,
-             "cryptType":"plain",
-             "user":"unkown",
-             "password":"secret"
+DEFAULT_CFG={
+            "debug":True,
+            "cryptType":"plain",
+            "user":"unkown",
+            "password":"secret"
              }
 
 ENDMARKER=b'<<stop>>!!!'
@@ -51,11 +54,12 @@ class version1:
         '''
             core protocol version 1
             
-            core: core object store in self.core
+            core: core object store in self.__core
             cfg: configuration {
                                 "debug":    true/false if true plain data was log
                                 "cryptType" plain/aes see in ENCRYPTION
-                                
+                                "user":"unkown",
+                                "password":"secret"
                                }
             running: var to stop the prortocol on shutdown
         '''   
@@ -114,13 +118,17 @@ class version1:
             commadsArgs=self.__getCommandRequest(clientSocket,self.__crypt, self.__config['user'],self.__config['password'])
             
             if commadsArgs['callFunction'] not in ALLOWED_FUNCTIONS:
-                raise protocolException("callfunction %s not allowed"%(commadsArgs['callFunction']),False)
+                error="callfunction %s not allowed"%(commadsArgs['callFunction'])
+                self.__sendResult(clientSocket,self.__crypt,self.__config['user'],self.__config['password'],result="error",message=error)   
+                raise protocolException(error,False)
             
             try:
                 LOG.debug("call function %s"%(commadsArgs['callFunction']))
-                methodToCall = getattr(self.core,commadsArgs['callFunction'])
+                methodToCall = getattr(self.__core,commadsArgs['callFunction'])
             except:
-                raise protocolException("callfunction %s not found"%(commadsArgs['callFunction']),False)
+                error="callfunction %s not found"%(commadsArgs['callFunction'])
+                self.__sendResult(clientSocket,self.__crypt,self.__config['user'],self.__config['password'],result="error",message=error)   
+                raise protocolException(error,False)
             
             args=commadsArgs['args']
             
@@ -129,15 +137,29 @@ class version1:
                 self.__sendResult(clientSocket,self.__crypt,self.__config['user'],self.__config['password'],result="ok")   
             except (Exception) as e:
                 self.__sendResult(clientSocket,self.__crypt,self.__config['user'],self.__config['password'],result="error",message="e.msg")   
-                raise protocolException("can't call function %s: (%s) error: %s"%(commadsArgs['callFunction'],commadsArgs,e.msg))
+                raise protocolException("can't call function %s: (%s)"%(commadsArgs['callFunction'],commadsArgs),True)
              
         except (protocolException,cryptException) as e:
             raise e   
         except:
-            raise protocolException("some unkown error in %s"%(self.core.thisMethode),True)
+            raise protocolException("some unkown error in %s"%(self.__core.thisMethode),True)
         
     def sendJob(self,clientSocket,jobQueue):
-        pass
+        '''
+            send a sync job to remote core
+            
+            clientSocket:    network socket
+            jobQueue:    object with job
+            
+            exception:protocolException,cryptException
+        '''
+        try:
+            self.__sendCommandRequest(clientSocket,self.__crypt,self.__config["user"],self.__config["password"],jobQueue)   
+            self.__checkCommandResponse(clientSocket, self.__crypt, self.__config["user"],self.__config["password"])
+        except (protocolException,cryptException) as e:
+            raise e
+        except:
+            raise protocolException("unkown error in protokol version1",True)
     
     
     def __readSocket(self,networkSocket):
@@ -186,7 +208,29 @@ class version1:
             clientSocket.sendall(data)
         except:
             raise protocolException("unkown err in writeSocket",True)
-        
+    
+    def __sendCommandRequest(self,networkSocket,encryption,user,password,job):
+        '''
+            send a command request to remote core
+            
+            networkSocket, network socket object
+            encryption:    encryption object
+            user:          user name
+            password:      password
+            job:           job as dict 
+            
+            exception: protocolException,cryptException
+        '''
+        try:
+            body=self.__buildBody(encryption,job,password)
+            commandString=self.__buildHeader(encryption, user, body)
+            LOG.debug("send command (objectID %s)"%(job))
+            self.__writeSocket(networkSocket,commandString)
+        except (protocolException,cryptException) as e:
+            raise e
+        except:
+            raise protocolException("unkown error in protokol",True)
+           
     def __getCommandRequest(self,clientSocket,encryption,user,password):
         '''
             get a command request
@@ -223,6 +267,30 @@ class version1:
             raise protocolException("protocol error:%s"%(e.msg))
         except :
             raise protocolException("unkown error in getCommandRequest",True)
+    
+    def __checkCommandResponse(self,networkSocket,encryption,user,password):
+        '''
+        check a rseult after a command action
+        
+        networkSocket: networ socket object
+        encryption: encryption object
+        user: user
+        password: password
+        
+        exception: protocolException,cryptException
+        '''
+        try:
+            ''' read network socket '''
+            readData=self.__readSocket(networkSocket)
+            ''' check resived data '''
+            readVars=encryption.unSerialData(readData)
+            self.__checkHeader(readVars.get("header",{}),user)            
+            decryptBodyVars=self.__decryptBody(readVars.get("body",{}),encryption,password)
+            self.__checkResult(decryptBodyVars)
+        except (protocolException,cryptException) as e:
+            raise e
+        except:
+            raise protocolException("unkown error in response password",True)
     
     def __buildBody(self,encryption,body,password):
         '''
@@ -333,4 +401,23 @@ class version1:
         except (cryptException,protocolException) as e:
             raise e
         except:
-            raise protocolException("can't send result")     
+            raise protocolException("can't send result") 
+        
+    def __checkResult(self,decryptBodyVars):
+        '''
+            check result of a message
+        
+            if result not OK send exception: protocolException
+        
+            decrptBodyVars: dict {"result": "...",
+                                  "message":"..."
+                                  }
+            exception: protocolException
+        '''
+        try:
+            if not decryptBodyVars.get('result','error')=="ok":
+                raise protocolException("result have error message::%s"%(decryptBodyVars.get('message',"unkown")),False)   
+        except (protocolException) as e:
+            raise e
+        except:
+            raise protocolException("unkown error in check result. body:%s"%(decryptBodyVars))    

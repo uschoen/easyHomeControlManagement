@@ -55,7 +55,7 @@ class coreChannels():
             '''
                 update remote core
             '''
-            self.updateRemoteCore(forceUpdate,objectID,self.thisMethode,objectID,channelName,channelCFG)
+            self.updateRemoteCore(forceUpdate,objectID,self.thisMethode(),objectID,channelName,channelCFG)
         except (Exception) as e:
             raise Exception("can't add channel %s msg:%s"%(channelName,e))   
     
@@ -107,7 +107,7 @@ class coreChannels():
             '''
                 update remote core
             '''
-            self.updateRemoteCore(forceUpdate,objectID,self.thisMethode,objectID,channelName,value)
+            self.updateRemoteCore(forceUpdate,objectID,self.thisMethode(),objectID,channelName,value)
         except:
             raise defaultEXC("can't setDeviceChannelValue  deviceID %s"%(objectID))
     

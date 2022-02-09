@@ -183,6 +183,21 @@ class defaultChannel(eventManager,object):
     def getValue(self):
         return self.parameter['value']
     
+    def callEvent(self,eventName):
+        '''
+            call a event from the channel
+            
+            eventName: event name to call
+            
+            exception: defaultEXC
+        '''
+        if eventName not in self.events:
+            raise defaultEXC("event %s unkown to call"%(eventName))
+        try:
+            self.events[eventName].callCallers(self)
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode()),True)
+    
     def setValue(self,
                  value):
         try:

@@ -40,7 +40,7 @@ class coreDevices():
             devicePackage=deviceCFG.get("devicePackage",DEFAULT_DEVICE_PACKGAE)
             deviceType=deviceCFG.get("deviceType",DEFAULT_DEVICE_TYPE)
             if self.ifDeviceIDExists(objectID):
-                self._deleteDevice(objectID)
+                self.__deleteDevice(objectID)
             self.__buildDevice(objectID,
                                devicePackage,
                                deviceType,
@@ -60,7 +60,23 @@ class coreDevices():
             
         
     def __deleteDevice(self,objectID):
-        LOG.error("delete device not implemted")
+        '''
+            delete a device from core
+           
+            objectID:    Device id to delete
+           
+            exception: default exception
+        '''
+        try:
+            if objectID not in self.devices:
+                LOG.warning("can't delete deviceID %s, not existing"%(objectID))
+                return
+            LOG.info("delete deviceID %s"%(objectID))
+            self.devices[objectID].callEvent("ondelete")
+            del self.devices[objectID]
+            
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode()),True)
         
     def addDevice(self,
                   objectID,
@@ -146,6 +162,24 @@ class coreDevices():
             return self.devices[objectID].ifDeviceEnable()
         except (Exception) as e:
             raise defaultEXC("can't not check ifdisable  deviceID %s MSG:%s"%(objectID, format(e)))
+    
+    def getDeviceConfiguration(self,objectID):
+        '''
+             get a device configuration from a device
+             
+             
+             return:    dict with the device configuration
+             
+             exception: defaultEXC
+        '''
+        if objectID not in self.devices:
+            raise defaultEXC("can't find deviceID %s"%(objectID))
+        try:
+            deviceCFG={}
+            deviceCFG=self.devices[objectID].getConfiguration()
+            return deviceCFG
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode()),True)
     
     def getDeviceParameter(self,
                            objectID

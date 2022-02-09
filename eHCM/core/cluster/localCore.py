@@ -19,13 +19,12 @@ from core.exception import defaultEXC
 
 
 from .protocol.version1  import version1
-from .protocol.version2  import version2
+
 from .protocol.protocolException import protocolException
 from .protocol.encryption.cryptException import cryptException
 
 CORE_PROTOCOL={
-             1:version1,
-             2:version2
+             1:version1
             }
 
 DEFAULT_CFG={"blocked":60,
@@ -81,8 +80,7 @@ class localCore(threading.Thread):
             default or wrong value, 1
         '''
         self.__coreProtocol={
-                        1:version1,
-                        2:version2
+                        1:version1
                       }
         if not self.__config['protocol']['version'] in self.__coreProtocol:
             LOG.error("protocolVersion %s is not avaible option, set to verion 1"%(self.__config['protocol']['version']))
@@ -132,7 +130,6 @@ class localCore(threading.Thread):
                     ''' shutdown '''  
                     LOG.debug("local core connector %s is stop %s"%(self.coreName,self.running))
                 time.sleep(1)
-                print("notsutdown")
             else:
                 LOG.info("local core connector %s is shutdown"%(self.coreName))
         except:
@@ -180,7 +177,7 @@ class localCore(threading.Thread):
             exception: none
         ''' 
         LOG.info("unblock core connector %s"%(self.coreName))
-        self.__clientBlocked=0
+        self.__blockTime=0
     
     def __closeSocket(self,networkSocket,clientIP):
         ''' 
@@ -215,7 +212,7 @@ class localCore(threading.Thread):
                 remoteCoreprotocol.reciveData(clientSocket,remoteCoreIP)
         
         except (protocolException,cryptException) as e:
-            LOG.warning("protocol error: on local core %s from remote ip %s : %s"%(self.coreName,remoteCoreIP,e.msg))
+            LOG.warning("protocol or cryption error: on local core %s from remote ip %s : %s"%(self.coreName,remoteCoreIP,e.msg))
         except:
             LOG.warning("unkown error  on local core %s from remote ip %s "%(self.coreName,remoteCoreIP),exc_info=True)
         LOG.debug("close client request from %s on %s"%(remoteCoreIP,self.coreName))

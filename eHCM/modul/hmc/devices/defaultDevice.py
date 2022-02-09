@@ -118,6 +118,21 @@ class defaultDevice(deviceBase,channelManager,eventManager):
         except (Exception) as e:
             raise defaultEXC("some error in ifDeviceEnable MSG:%s"%(format(e)))
     
+    def callEvent(self,eventName):
+        '''
+            call a event from the channel
+            
+            eventName: event name to call
+            
+            exception: defaultEXC
+        '''
+        if eventName not in self.events:
+            raise defaultEXC("event %s unkown to call"%(eventName))
+        try:
+            self.events[eventName].callCallers(self)
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode()),True)
+    
     def getConfiguration(self):
         '''
         get the hole  device & channel & event configuration back
