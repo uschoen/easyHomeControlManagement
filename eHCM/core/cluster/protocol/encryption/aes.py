@@ -29,7 +29,7 @@ import logging
 from base64 import b64encode
 
 # Local application imports
-from .exception import cryptException
+from .cryptException import cryptException
 
 LOG=logging.getLogger(__name__)
 BS = 16

@@ -16,13 +16,22 @@ import socket
 
 # local library imports
 from core.exception import defaultEXC
+
+
 from .protocol.version1  import version1
 from .protocol.version2  import version2
+from .protocol.protocolException import protocolException
+from .protocol.encryption.cryptException import cryptException
+
+CORE_PROTOCOL={
+             1:version1,
+             2:version2
+            }
 
 DEFAULT_CFG={"blocked":60,
              "enable":False,
              "port":9000,
-             "protokolVersion":1}
+             "protocol":{"version":1}}
 
 LOG=logging.getLogger(__name__) 
 
@@ -68,17 +77,18 @@ class localCore(threading.Thread):
         self.running=self.__config['enable']
         
         '''
-            add coreProtokoll version
+            add coreprotocoll version
             default or wrong value, 1
         '''
         self.__coreProtocol={
                         1:version1,
                         2:version2
                       }
-        if not self.__config['protokolVersion'] in self.__coreProtocol:
-            LOG.error("protokolVersion %s is not avaible option, set to verion 1"%(self.__config['protokolVersion']))
-            self.__config['protokolVersion']=1 
-            
+        if not self.__config['protocol']['version'] in self.__coreProtocol:
+            LOG.error("protocolVersion %s is not avaible option, set to verion 1"%(self.__config['protocol']['version']))
+            self.__config['protocol']['version']=1 
+        self.__remoteCoreprotocol=False
+        
         LOG.info("init new local core server %s version %s"%(self.coreName,__version__))
 
     def run(self):
@@ -136,6 +146,8 @@ class localCore(threading.Thread):
         '''
         try:
             LOG.critical("stop local core connection %s"%(self.coreName))
+            if self.__remoteCoreprotocol:
+                self.__remoteCoreprotocol.stop()
             self.running=False
         except:
             raise defaultEXC("can't shutdown remote core connection %s"%(self.coreName))
@@ -199,23 +211,25 @@ class localCore(threading.Thread):
         '''
         try:
             LOG.debug("get new client request from %s on %s"%(remoteCoreIP,self.coreName))
+            protocolCFG=self.__config['protocol']
             '''
-            protocolCFG={"encryption":self.config['protocol']['encryption'],
+                "encryption":self.config['protocol']['encryption'],
                                              "remoteCore":self.coreID,
                                              "blocked":self.config["blocked"],
                                              "ip": self.config["ip"],
                                              "port":self.config["port"]
                                              }
-            coreProtocol=CORE_PROTOCOL[self.config['protocol']['version']](protocolCFG,self.__core,self.running)
+            '''
+            self.__remoteCoreprotocol=CORE_PROTOCOL[self.config['protocol']['version']](self.core,protocolCFG,self.running)
             while self.running and not self.ifShutdown:
-                coreProtocol.reciveData(clientSocket,remoteCoreIP)
+                self.__remoteCoreprotocol.reciveData(clientSocket,remoteCoreIP)
         
-        except (protocolException,encryptionException) as e:
+        except (protocolException,cryptException) as e:
             LOG.warning("protocol error: on local core %s from remote ip %s : %s"%(self.coreID,remoteCoreIP,e.msg))
-        '''
         except:
             LOG.warning("unkown error  on local core %s from remote ip %s "%(self.coreName,remoteCoreIP),True)
         LOG.debug("close client request from %s on %s"%(remoteCoreIP,self.coreName))
+        self.__remoteCoreprotocol=False
         self.__closeSocket(clientSocket,remoteCoreIP)     
     
     def __buildSocket(self,ip,port):

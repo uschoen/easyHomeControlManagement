@@ -11,7 +11,7 @@ __author__ = 'ullrich schoen'
 import pickle 
 import logging
 # Local application imports
-from .exception import cryptException
+from core.cluster.protocol.encryption.cryptException import cryptException
 
 LOG=logging.getLogger(__name__)
 

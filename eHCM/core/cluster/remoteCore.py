@@ -17,10 +17,20 @@ import queue
 
 # local library imports
 from core.exception import defaultEXC
+from .protocol.version1  import version1
+from .protocol.version2  import version2
+from .protocol.protocolException import protocolException
+from .protocol.encryption.cryptException import cryptException
+
+CORE_protocol={
+             1:version1,
+             2:version2
+            }
 
 DEFAULT_CFG={"blocked":60,
              "enable":False,
-             "port":9000}
+             "port":9000,
+             "protocol":{"version":1}}
 
 LOG=logging.getLogger(__name__) 
 
@@ -69,11 +79,33 @@ class remoteCore(threading.Thread):
         '''
         self.__blockTime=0
         
+        '''
+            core sync status
+        '''
+        self.coreStatusSync=False
            
         ''' 
             core queue, for core jobs
         '''
         self.__coreQueue=queue.Queue()
+        
+        '''
+            sync queue, for sync jobs
+        '''
+        self.__syncQueue=queue.Queue()
+        
+        '''
+            add coreprotocol version
+            default or wrong value, 1
+        '''
+        self.__coreProtocol={
+                        1:version1,
+                        2:version2
+                      }
+        if not self.__config['protocol']['version'] in self.__coreProtocol:
+            LOG.error("protocolVersion %s is not avaible option, set to verion 1"%(self.__config['protocol']['version']))
+            self.__config['protocol']['version']=1 
+        self.__remoteCoreProtocol=False
         
         LOG.info("init new remote core server %s version %s"%(self.coreName,__version__))
 
@@ -84,11 +116,18 @@ class remoteCore(threading.Thread):
                 ''' running or stop '''
                 while self.running:
                     try:
-                        pass
+                        if self.__blockTime<int(time.time()):
+                            if not self.__remoteCoreProtocol:
+                                self.__remoteCoreProtocol=self.__coreProtocol[self.__config['protocol']['version']](self.core,self.__config['protocol'],self.running)
+                                self.__syncRemoteCore()
+                            if not self.__coreQueue.empty():
+                                self.__workingQueue(self.__coreQueue)    
+                                
                     except:
-                        pass
-                        self.stop()
-                    time.sleep(0.5)
+                        self.__blockServer()
+                        self.__remoteCoreProtocol=False   
+                        self.__setCoreNotSync()
+                        LOG.error("close connecion to %s and try agin in %i sec"%(self.coreName,self.__config['blocked'])) 
                 else:
                     ''' shutdown '''  
                     LOG.info("remote core connector %s is stop"%(self.coreName))
@@ -98,6 +137,145 @@ class remoteCore(threading.Thread):
         except:
             LOG.critical("remote core connector %s is shutdown with error"%(self.coreName))
             
+    def __workingQueue(self,jobQueue):
+        '''
+        ' send all job
+        '
+        '    remotoCoreprotocol: object    protocol object 
+        '    jobQueue:           dict     a dictnory with jobs
+        '
+        '    exception:   cryptException
+        '                 protocolException
+        '                 remoteCoreException
+        '
+        '''
+        try:
+            LOG.debug("work for queue to core %s"%(self.coreName))
+            while not jobQueue.empty():
+                self.__remoteCoreprotocol.sendJob(clientSocket,jobQueue.get())
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+    
+    def __syncRemoteCore(self):
+        '''
+        '
+        '    sync all object to remote core
+        '
+        '    exception:    defaultEXC
+        '                  
+        '''
+        try:
+            LOG.info("try to sync for core client %s"%(self.coreName))
+            self.__clearCoreQueue()          
+            self.__clearsyncQueue()
+            self.__syncCoreModule()
+            self.__syncCoreDevices()
+            self.__syncCoreCluster()
+            while not self.coreStatusSync:
+                if self.__syncQueue.empty():
+                    break
+                self.__workingQueue(self.__remoteCoreprotocol,self.__syncQueue)
+            LOG.info("finish with sync to core %s"%(self.coreName))
+            self.__unblockClient()
+            self.__setCoreIsSync()
+    
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+    
+    def __setCoreIsSync(self):
+        '''
+        '
+        '   set staus sync to true
+        '
+        '   exception: none
+        '
+        '''
+        LOG.info("core client to core %s is syncron"%(self.coreName))
+        self.coreStatusSync=True
+        
+    def __syncCoreClients(self):
+        '''
+        sync all core clients from this host
+        '''
+        try:
+            LOG.info("sync core cluster to host %s"%(self.coreName))
+            for coreName in self.core.coreClients:
+                if not self.core.ifonThisHost(coreName):
+                    continue
+                args=(coreName,self.core.coreClients[coreName]['config'])
+                updateObj={
+                            'objectID':coreName,
+                            'callFunction':'updateCoreConnector',
+                            'args':args}
+                self.__syncQueue.put(updateObj)
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+    def __syncCoreModule(self):
+        '''
+        sync all comodulere  from this host
+        
+        exception: defaultEXC
+        '''
+        return
+        try:
+            LOG.info("sync module to host %s"%(self.coreName))
+            for objectID in self.core.getAllModulNames():
+                if not self.core.ifonThisHost(objectID):
+                    continue
+                updateObj={
+                        'objectID':objectID,
+                        'callFunction':'restoreModul',
+                        'args':(objectID,self.core.getModulConfiguration(objectID))}
+                self.__syncQueue.put(updateObj)
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+    
+    def __syncCoreDevices(self):
+        '''
+        sync all devices from this host
+        '''
+        try:
+            LOG.info("sync devices to core %s"%(self.coreName))
+            for deviceID in self.core.getAllDeviceID():
+                if not self.core.ifonThisHost(deviceID):
+                    continue
+                LOG.info("sync devicesID %s to core %s"%(deviceID,self.coreName))
+                device=self.core.getDeviceConfiguration(deviceID)
+                args=(deviceID,device)
+                updateObj={
+                        'objectID':deviceID,
+                        'callFunction':'restoreDevice',
+                        'args':args}
+                self.__syncQueue.put(updateObj)
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+        
+    def __clearCoreQueue(self):
+        '''
+        ' clear the core Queue
+        ' 
+        ' exception: remoteCoreException
+        '
+        '''
+        try:
+            LOG.info("clear core queue from %s"%(self.coreName))
+            self.__coreQueue.queue.clear()
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+    
+    def __clearSyncQueue(self):
+        '''
+        ' clear the Sync Queue
+        ' 
+        ' exception: defaultEXC
+        '
+        '''
+        try:
+            LOG.info("clear sync queue from %s"%(self.coreName))
+            self.__syncQueue.queue.clear()
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+        
     def stop(self):
         '''
         stop the remote Core client
@@ -106,6 +284,8 @@ class remoteCore(threading.Thread):
         '''
         try:
             LOG.critical("stop remote core connection %s"%(self.coreName))
+            if self.__remoteCoreProtocol:
+                self.__remoteCoreProtocol.stop()
             self.running=False
         except:
             raise defaultEXC("can't shutdown remote core connection %s"%(self.coreName))
@@ -167,4 +347,13 @@ class remoteCore(threading.Thread):
         ''' 
         LOG.info("unblock core connector %s"%(self.coreName))
         self.__clientBlocked=0
-            
+    
+    def __setCoreNotSync(self):
+        '''
+        '   set staus sync to false
+        '
+        '   exception: none
+        '
+        '''
+        LOG.info("core client to core %s is not syncron"%(self.coreName))
+        self.coreStatusSync=False
