@@ -5,18 +5,17 @@ Created on 01.12.2018
 '''
 
 
+
 __version__='9.0'
 __author__ = 'ullrich schoen'
 
 # Standard library imports
-import logging
 
+# Local application imports
 from core.exception import defaultEXC
 
 
-
-LOG=logging.getLogger(__name__)
       
               
-class cryptException(defaultEXC):
+class protocolException(defaultEXC):
     pass
