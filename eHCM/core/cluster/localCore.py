@@ -210,14 +210,6 @@ class localCore(threading.Thread):
         try:
             LOG.debug("get new client request from %s on %s"%(remoteCoreIP,self.coreName))
             protocolCFG=self.__config['protocol']
-            '''
-                "encryption":self.__config['protocol']['encryption'],
-                                             "remoteCore":self.coreID,
-                                             "blocked":self.config["blocked"],
-                                             "ip": self.config["ip"],
-                                             "port":self.config["port"]
-                                             }
-            '''
             remoteCoreprotocol=CORE_PROTOCOL[self.__config['protocol']['version']](self.core,protocolCFG,self.running)
             while self.running and not self.ifShutdown:
                 remoteCoreprotocol.reciveData(clientSocket,remoteCoreIP)
