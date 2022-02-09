@@ -11,7 +11,7 @@ __author__ = 'ullrich schoen'
 import pickle 
 import logging
 # Local application imports
-from core.cluster.protocol.encryption.cryptException import cryptException
+from .cryptException import cryptException
 
 LOG=logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class plain(object):
     def __init__(self):
         LOG.debug("init plain encryption, version %s"%(__version__))
 
-    def __serialData(self,var):
+    def serialData(self,var):
         '''
         serial data, from a json var to a string
         '''
@@ -30,7 +30,7 @@ class plain(object):
         except:
             raise cryptException("can't serial data",True)
     
-    def __unSerialData(self,serialData):
+    def unSerialData(self,serialData):
         try:
             unSerialData=pickle.loads(serialData)
             return unSerialData 
@@ -43,7 +43,7 @@ class plain(object):
         '''
         try:
             plaintext=cryptstring
-            var=self.__unSerialData(plaintext)
+            var=self.unSerialData(plaintext)
             return var
         except (cryptException) as e:
             raise e
@@ -56,7 +56,7 @@ class plain(object):
         encrypt/verschluesseln a var
         '''
         try:
-            plaintext=self.__serialData(var)   
+            plaintext=self.serialData(var)   
             string=plaintext
             return string
         except (cryptException) as e:

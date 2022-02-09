@@ -42,7 +42,7 @@ class aes(object):
           
         LOG.debug("init aes encryption, version %s"%(__version__))
 
-    def __serialData(self,var):
+    def serialData(self,var):
         '''
         serial data, from a json var to a string
         '''
@@ -52,7 +52,7 @@ class aes(object):
         except:
             raise cryptException("can't serial data",False)
     
-    def __unSerialData(self,serialData):
+    def unSerialData(self,serialData):
         '''
         unsiral data from a string to a jason var
         '''
@@ -69,7 +69,7 @@ class aes(object):
         try:
             LOG.info("use AES decryption")
             plaintext=self.__decrypt(cryptstring,key)
-            var=self.__unSerialData(plaintext)
+            var=self.unSerialData(plaintext)
             return var
         except:
             raise cryptException( "can not decrypt message",False)
@@ -81,7 +81,7 @@ class aes(object):
         '''
         try:
             LOG.info("use AES encryption")
-            plaintext=self.__serialData(var)   
+            plaintext=self.serialData(var)   
             string=self.__encrypt(plaintext, key)
             return string
         except:
