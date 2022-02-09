@@ -83,6 +83,11 @@ class remoteCore(threading.Thread):
             core sync status
         '''
         self.coreStatusSync=False
+        
+        '''
+            network socket
+        '''
+        self.__networkSocket=False
            
         ''' 
             core queue, for core jobs
@@ -119,15 +124,17 @@ class remoteCore(threading.Thread):
                         if self.__blockTime<int(time.time()):
                             if not self.__remoteCoreProtocol:
                                 self.__remoteCoreProtocol=self.__coreProtocol[self.__config['protocol']['version']](self.core,self.__config['protocol'],self.running)
+                                self.__networkSocket=self.__buildSocket(self.__config["ip"],self.__config['port'])
                                 self.__syncRemoteCore()
                             if not self.__coreQueue.empty():
-                                self.__workingQueue(self.__coreQueue)    
+                                self.__workingQueue(self.__networkSocket,self.__coreQueue)    
                                 
                     except:
                         self.__blockServer()
                         self.__remoteCoreProtocol=False   
                         self.__setCoreNotSync()
-                        LOG.error("close connecion to %s and try agin in %i sec"%(self.coreName,self.__config['blocked'])) 
+                        self.__closeSocket(self.__networkSocket, self.__config["ip"])
+                        LOG.error("close connecion to %s and try again in %i sec"%(self.coreName,self.__config['blocked']),exc_info=True) 
                 else:
                     ''' shutdown '''  
                     LOG.info("remote core connector %s is stop"%(self.coreName))
@@ -137,11 +144,11 @@ class remoteCore(threading.Thread):
         except:
             LOG.critical("remote core connector %s is shutdown with error"%(self.coreName))
             
-    def __workingQueue(self,jobQueue):
+    def __workingQueue(self,networkSocket,jobQueue):
         '''
         ' send all job
         '
-        '    remotoCoreprotocol: object    protocol object 
+        '    remotoCoreProtocol: object    protocol object 
         '    jobQueue:           dict     a dictnory with jobs
         '
         '    exception:   cryptException
@@ -152,9 +159,44 @@ class remoteCore(threading.Thread):
         try:
             LOG.debug("work for queue to core %s"%(self.coreName))
             while not jobQueue.empty():
-                self.__remoteCoreprotocol.sendJob(clientSocket,jobQueue.get())
+                self.__remoteCoreprotocol.sendJob(networkSocket,jobQueue.get())
         except:
-            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode),True)
+    
+    def __closeSocket(self,networkSocket,clientIP):
+        ''' 
+            close the server socket 
+            
+            networkSocket: intance of the network socket
+            clientIP: remote client IP
+        '''
+        try:
+            if not networkSocket:
+                return
+            networkSocket.close()
+        except:                             
+            LOG.info("can't close socket on local core %s for remote client %s"%(self.coreName,clientIP))
+        
+        LOG.warning("close local core socket %s from %s ip"%(self.coreName,clientIP))
+    
+    def __buildSocket(self,ip,port):
+        '''
+        open a network socket to a core
+        
+        ip:ip adress oft the server
+        port: port of the server
+        
+        eyception: defaultEXC
+        '''
+        try:
+            LOG.debug("try connect to remote core %s:%s"%(ip,port))
+            clientSocket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            clientSocket.connect((ip,port))
+            return clientSocket
+        except (socket.error,ConnectionRefusedError):
+            raise defaultEXC ("can't open socket to remote core %s:%s"%(ip,port),False)
+        except:
+            raise defaultEXC("unkown error in buildSocket ip:%s:%s on remote core %s"%(ip,port,self.coreName),True)
     
     def __syncRemoteCore(self):
         '''
@@ -174,13 +216,13 @@ class remoteCore(threading.Thread):
             while not self.coreStatusSync:
                 if self.__syncQueue.empty():
                     break
-                self.__workingQueue(self.__remoteCoreprotocol,self.__syncQueue)
+                self.__workingQueue(self.__networkSocket,self.__syncQueue)
             LOG.info("finish with sync to core %s"%(self.coreName))
             self.__unblockClient()
             self.__setCoreIsSync()
     
         except:
-            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode),True)
     
     def __setCoreIsSync(self):
         '''
@@ -209,7 +251,9 @@ class remoteCore(threading.Thread):
                             'args':args}
                 self.__syncQueue.put(updateObj)
         except:
-            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode),True)
+    
+    
     def __syncCoreModule(self):
         '''
         sync all comodulere  from this host
@@ -228,7 +272,7 @@ class remoteCore(threading.Thread):
                         'args':(objectID,self.core.getModulConfiguration(objectID))}
                 self.__syncQueue.put(updateObj)
         except:
-            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode),True)
     
     def __syncCoreDevices(self):
         '''
@@ -248,7 +292,7 @@ class remoteCore(threading.Thread):
                         'args':args}
                 self.__syncQueue.put(updateObj)
         except:
-            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode),True)
         
     def __clearCoreQueue(self):
         '''
@@ -261,7 +305,7 @@ class remoteCore(threading.Thread):
             LOG.info("clear core queue from %s"%(self.coreName))
             self.__coreQueue.queue.clear()
         except:
-            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode),True)
     
     def __clearSyncQueue(self):
         '''
@@ -274,7 +318,7 @@ class remoteCore(threading.Thread):
             LOG.info("clear sync queue from %s"%(self.coreName))
             self.__syncQueue.queue.clear()
         except:
-            raise defaultEXC("some unkown error in %s"%(self.thisMethode),True)
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode),True)
         
     def stop(self):
         '''
@@ -284,8 +328,6 @@ class remoteCore(threading.Thread):
         '''
         try:
             LOG.critical("stop remote core connection %s"%(self.coreName))
-            if self.__remoteCoreProtocol:
-                self.__remoteCoreProtocol.stop()
             self.running=False
         except:
             raise defaultEXC("can't shutdown remote core connection %s"%(self.coreName))

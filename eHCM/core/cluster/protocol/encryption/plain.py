@@ -28,7 +28,7 @@ class plain(object):
             serialData=pickle.dumps(var)
             return serialData
         except:
-            raise cryptException("can't serial data",True)
+            raise cryptException("can't serial data")
     
     def unSerialData(self,serialData):
         try:

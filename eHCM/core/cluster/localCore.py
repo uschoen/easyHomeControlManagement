@@ -146,8 +146,6 @@ class localCore(threading.Thread):
         '''
         try:
             LOG.critical("stop local core connection %s"%(self.coreName))
-            if self.__remoteCoreprotocol:
-                self.__remoteCoreprotocol.stop()
             self.running=False
         except:
             raise defaultEXC("can't shutdown remote core connection %s"%(self.coreName))
@@ -213,21 +211,21 @@ class localCore(threading.Thread):
             LOG.debug("get new client request from %s on %s"%(remoteCoreIP,self.coreName))
             protocolCFG=self.__config['protocol']
             '''
-                "encryption":self.config['protocol']['encryption'],
+                "encryption":self.__config['protocol']['encryption'],
                                              "remoteCore":self.coreID,
                                              "blocked":self.config["blocked"],
                                              "ip": self.config["ip"],
                                              "port":self.config["port"]
                                              }
             '''
-            self.__remoteCoreprotocol=CORE_PROTOCOL[self.config['protocol']['version']](self.core,protocolCFG,self.running)
+            remoteCoreprotocol=CORE_PROTOCOL[self.__config['protocol']['version']](self.core,protocolCFG,self.running)
             while self.running and not self.ifShutdown:
-                self.__remoteCoreprotocol.reciveData(clientSocket,remoteCoreIP)
+                remoteCoreprotocol.reciveData(clientSocket,remoteCoreIP)
         
         except (protocolException,cryptException) as e:
-            LOG.warning("protocol error: on local core %s from remote ip %s : %s"%(self.coreID,remoteCoreIP,e.msg))
+            LOG.warning("protocol error: on local core %s from remote ip %s : %s"%(self.coreName,remoteCoreIP,e.msg))
         except:
-            LOG.warning("unkown error  on local core %s from remote ip %s "%(self.coreName,remoteCoreIP),True)
+            LOG.warning("unkown error  on local core %s from remote ip %s "%(self.coreName,remoteCoreIP),exc_info=True)
         LOG.debug("close client request from %s on %s"%(remoteCoreIP,self.coreName))
         self.__remoteCoreprotocol=False
         self.__closeSocket(clientSocket,remoteCoreIP)     
