@@ -145,7 +145,7 @@ class scriptManager():
         except:
             raise defaultError("can't read script configuration",True)
         
-    def runScript(self,scriptName,script=None,callerObject=None,callerVars={},programDeep=0,forceUpdate):
+    def runScript(self,scriptName,script=None,callerObject=None,callerVars={},programDeep=0,forceUpdate=False):
         try:
             if self.ifonThisHost(scriptName):
                 LOG.debug("run script name: %s , with script: %s"%(scriptName,script))
