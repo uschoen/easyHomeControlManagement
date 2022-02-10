@@ -195,7 +195,7 @@ class coreModule():
         if objectID not in self.module:
             raise defaultEXC("can't find modul: %s"%(objectID))
         try:
-            return self.module[objectID].getConfiguration()
+            return self.module[objectID]['instance'].getConfiguration()
         except:
             raise defaultEXC("some unkown error in %s"%(self.thisMethode()),True)
         
