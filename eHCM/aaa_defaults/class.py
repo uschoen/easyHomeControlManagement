@@ -18,15 +18,15 @@ LOG=logging.getLogger(__name__)
 
 def CLASSNAME1(self,objectID,var_2,forceUpdate=False):
         '''
-        update a Core connector
-        
-        objectID:      core objectID
-        ...
-        forceUpdate:    true/false(default) force update remote core
-        
-        return
-        
-        exception: clusterException
+            update a Core connector
+            
+            objectID:      core objectID
+            ...
+            forceUpdate:    true/false(default) force update remote core
+            
+            return
+            
+            exception: clusterException
         '''
         try:
             pass
@@ -36,15 +36,15 @@ def CLASSNAME1(self,objectID,var_2,forceUpdate=False):
 
 def CLASSNAME(self,objectID,var_2,forceUpdate=False):
         '''
-        update a Core connector
-        
-        objectID:      core objectID
-        ...
-        forceUpdate:    true/false(default) force update remote core
-        
-        return
-        
-        exception: clusterException
+            update a Core connector
+            
+            objectID:      core objectID
+            ...
+            forceUpdate:    true/false(default) force update remote core
+            
+            return
+            
+            exception: clusterException
         '''
         try:
             if self.ifonThisHost(objectID):
