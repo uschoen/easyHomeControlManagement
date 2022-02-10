@@ -35,7 +35,7 @@ ALLOWED_FUNCTIONS={
                 }
 
 DEFAULT_CFG={
-            "debug":True,
+            "debug":False,
             "cryptType":"plain",
             "user":"unkown",
             "password":"secret"
@@ -102,7 +102,6 @@ class version1:
             LOG.error("%s is not avaible option for encoding, use plain now"%(self.__config["cryptType"]))
             self.__config["cryptType"]="plain"
         self.__crypt=ENCRYPTION[self.__config["cryptType"]]()
-        
         LOG.info("init protokol version 1 finish, version %s"%(__version__))     
     
     def reciveData(self,clientSocket,remoteCoreIP):
@@ -125,7 +124,7 @@ class version1:
                 raise protocolException(error,False)
             
             try:
-                LOG.debug("call function %s"%(commadsArgs['callFunction']))
+                LOG.debug("call function %s for %s"%(commadsArgs['callFunction'],commadsArgs['objectID']))
                 methodToCall = getattr(self.__core,commadsArgs['callFunction'])
             except:
                 error="callfunction %s not found"%(commadsArgs['callFunction'])
@@ -250,7 +249,7 @@ class version1:
             ''' read network socket '''
             LOG.debug("waiting for next command request")
             readData=self.__readSocket(clientSocket)
-            LOG.debug("get Command Request")
+            LOG.debug("get Request")
          
             ''' check resived data '''
             readVars=encryption.unSerialData(readData)
