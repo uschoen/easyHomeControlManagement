@@ -31,7 +31,8 @@ ALLOWED_FUNCTIONS={
                     'setDeviceChannelValue',
                     'restoreDevice',
                     'restoreModul,',
-                    'addScript'
+                    'addScript',
+                    'restoreModul'
                 }
 
 DEFAULT_CFG={
@@ -137,7 +138,7 @@ class version1:
                 methodToCall(*args)
                 self.__sendResult(clientSocket,self.__crypt,self.__config['user'],self.__config['password'],result="ok")   
             except (Exception) as e:
-                self.__sendResult(clientSocket,self.__crypt,self.__config['user'],self.__config['password'],result="error",message="e.msg")   
+                self.__sendResult(clientSocket,self.__crypt,self.__config['user'],self.__config['password'],result="error",message="%s"%(e))   
                 raise protocolException("can't call function %s: (%s)"%(commadsArgs['callFunction'],commadsArgs),True)
              
         except (protocolException,cryptException) as e:
