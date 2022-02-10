@@ -167,8 +167,21 @@ class coreModule():
                 LOG.error("can't find modul %s to stop"%(objectID))
         except:
             del self.module[objectID]
-            raise defaultEXC("some errer delete modul %s hard"%(objectID),True)
+            raise defaultEXC("unkown error delete modul %s hard"%(objectID),True)
     
+    def getAllModulNames(self):
+        '''
+            get all modul names back
+            
+            return: list with modul name
+            
+            exception: defaultEXC
+        '''
+        try:
+            return self.module.keys()
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode()),True)
+        
     def getModulConfiguration(self,objectID):
         '''
             update a Core connectorget the configuration from a modul back
