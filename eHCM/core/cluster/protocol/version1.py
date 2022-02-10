@@ -29,7 +29,8 @@ ENCRYPTION={
 ALLOWED_FUNCTIONS={
                     'updateCoreConnector',
                     'setDeviceChannelValue',
-                    'restoreDevice'
+                    'restoreDevice',
+                    'restoreModul,'
                 }
 
 DEFAULT_CFG={
