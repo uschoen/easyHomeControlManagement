@@ -58,9 +58,13 @@ class coreModule():
                             "startable":self.module[modulName].get('startable',False),
                             "enable":self.module[modulName].get('enable',False),
                             "modulPackage":self.module[modulName].get('modulPackage',False),
-                            "modulClass":self.module[modulName].get('modulClass',False),
-                            "config":self.module[modulName].get('config',{}),
+                            "modulClass":self.module[modulName].get('modulClass',False)
                             }
+                if self.ifonThisHost(modulName):
+                    modulCFG[modulName]['config']=self.module[modulName]['instance'].getConfiguration()
+                else:
+                    modulCFG[modulName]['config']=self.module[modulName]['config']
+                    
             self.writeJSON(fileNameABS,modulCFG)
         except (Exception) as e:
             raise defaultEXC("can't _writeModulConfiguration: %s"%(e)) 
@@ -195,7 +199,13 @@ class coreModule():
         if objectID not in self.module:
             raise defaultEXC("can't find modul: %s"%(objectID))
         try:
-            return self.module[objectID]['instance'].getConfiguration()
+            cfg={"startable":self.module[objectID].get('startable',False),
+                 "enable":self.module[objectID].get('enable',False),
+                 "modulPackage":self.module[objectID].get('modulPackage',False),
+                 "modulClass":self.module[objectID].get('modulClass',False),
+                 "config":self.module[objectID]['instance'].getConfiguration()
+            }
+            return cfg
         except:
             raise defaultEXC("some unkown error in %s"%(self.thisMethode()),True)
         
@@ -219,7 +229,7 @@ class coreModule():
         except:
             raise defaultEXC("some unkown error in %s"%(self.thisMethode()),True)
         
-    def __restoreModul(self,objectID,modulCFG):
+    def __restoreModul(self,objectID,modulCFG={}):
             '''
                 internale funtion to restore a Module
             
@@ -236,7 +246,7 @@ class coreModule():
                     if (self.module[objectID]['startable']):
                         self.__startModul(objectID)
             except:
-                raise defaultEXC("some error in restoreModule",True)
+                raise defaultEXC("unkown error in %s"%(self.thisMethode()),True)
     
     
     def shutDownAllModule(self,hostID=None,forceUpdate=False):
@@ -254,11 +264,11 @@ class coreModule():
             else:
                 self.updateRemoteCore(forceUpdate,hostID,'shutDownAllModule',hostID)
         except:
-            raise defaultEXC("some error in shutdownAllModule",True)    
+            raise defaultEXC("unkown error in %s"%(self.thisMethode()),True)
     
     def __buildModul(self,  
                       objectID,
-                      modulCFG
+                      modulCFG={}
                       ):
         '''
         add a core connector as server or client
@@ -303,5 +313,5 @@ class coreModule():
             self.module[objectID]['instance']=False
             self.module[objectID]['running']=False
             self.module[objectID]['shutdown']=True
-            raise defaultEXC("can not build modul %s"%(objectID),True)
+            raise defaultEXC("unkown error in %s"%(self.thisMethode()),True)
         

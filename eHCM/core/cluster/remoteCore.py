@@ -285,7 +285,7 @@ class remoteCore(threading.Thread):
         
         exception: defaultEXC
         '''
-        return
+        
         try:
             LOG.info("sync module to host %s"%(self.coreName))
             for objectID in self.core.getAllModulNames():
