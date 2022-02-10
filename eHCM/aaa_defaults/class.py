@@ -11,12 +11,12 @@ __author__ = 'ullrich schoen'
 import logging
 
 # Local application imports
-from .exception import defaultEXC
+from core.exception import defaultEXC
 
 
 LOG=logging.getLogger(__name__) 
 
-def CLASSNAME(self,objectID,var_2,forceUpdate=False):
+def CLASSNAME1(self,objectID,var_2,forceUpdate=False):
         '''
         update a Core connector
         
@@ -30,7 +30,7 @@ def CLASSNAME(self,objectID,var_2,forceUpdate=False):
         '''
         try:
             pass
-            self.updateRemoteCore(forceUpdate,objectID,self.thisMethode,objectID,var 2)
+            self.updateRemoteCore(forceUpdate,objectID,self.thisMethode,objectID,var_2)
         except:
             raise defaultEXC("some unkown error in %s"%(self.thisMethode()),True)
 
@@ -51,6 +51,6 @@ def CLASSNAME(self,objectID,var_2,forceUpdate=False):
                 '''
                 job only for this host
                 ''' 
-            self.updateRemoteCore(forceUpdate,objectID,self.thisMethode,objectID,var 2)
+            self.updateRemoteCore(forceUpdate,objectID,self.thisMethode,objectID,var_2)
         except:
             raise defaultEXC("some unkown error in %s"%(self.thisMethode()),True)
