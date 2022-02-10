@@ -220,13 +220,17 @@ class version1:
             user:          user name
             password:      password
             job:           job as dict 
+                            job={ "callFunction": ...,
+                                  "objectID":...,
+                                  "args":...
+                                  }
             
             exception: protocolException,cryptException
         '''
         try:
             body=self.__buildBody(encryption,job,password)
             commandString=self.__buildHeader(encryption, user, body)
-            LOG.debug("send command (objectID %s)"%(job))
+            LOG.debug("send call function %s for objectID %s"%(job['callFunction'],job['objectID']))
             self.__writeSocket(networkSocket,commandString)
         except (protocolException,cryptException) as e:
             raise e
@@ -372,7 +376,7 @@ class version1:
             if not header.get('protocol',0)==__protocolVersion__:
                 raise protocolException("error no or wrong protokol version. header is:%s"%(header))
             if not header.get('user',"unkown")==user:
-                raise protocolException("error no or wrong user. header:%s"%(header))
+                raise protocolException("error no or wrong user.[%s]== header:%s"%(user,header))
         except (protocolException) as e:
             raise e
         except:
