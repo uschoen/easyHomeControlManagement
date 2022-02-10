@@ -31,22 +31,28 @@ class scriptManager():
         self.scripts={}
         LOG.info("init core scriptmanager finish, version %s"%(__version__))
         
-    def addScript(self,scriptName,script,forecUpdate=False):
+    def addScript(self,scriptName,script,forceUpdate=False):
         '''
-        add a Script
+            add a Script to core
+            
+            scriptName: strg  name of the script (name@host.de)
+            script:     strg json string
+            forceUpdate:    true/false(default) force update remote core
+            
+            exception: defaultError
         '''  
         try:
             self.__addScript(scriptName, script)
-            self.updateRemoteCore(forecUpdate,scriptName,'addScript',scriptName,script)
+            self.updateRemoteCore(forceUpdate,scriptName,self.thisMethode(),scriptName,script)
         except:
-            raise defaultError("unknown error in addScript",True)
+            raise defaultError("unkown error in %s"%(self.thisMethode()),True)
     
     def __addScript(self,scriptName,script,test=False):
         try:
             LOG.debug("add script  %s"%(scriptName))
             self.scripts[scriptName]=script
         except:
-            raise defaultError("unknown error in __addScript",True)
+            raise defaultError("unkown error in %s"%(self.thisMethode()),True)
     
     def updateScript(self,scriptName,script,forecUpdate=False):
         '''
@@ -56,7 +62,7 @@ class scriptManager():
             pass
             self.updateRemoteCore(forecUpdate,scriptName,'updateScript',scriptName,script)
         except:
-            raise defaultError("unknown error in updateScript",True)
+            raise defaultError("unkown error in %s"%(self.thisMethode()),True)
     
     def __restoreScript(self,scriptName,script):
         '''
@@ -68,7 +74,7 @@ class scriptManager():
                 self.__deleteScript(scriptName)
             self.__addScript(scriptName,script)
         except:
-            raise defaultError("unknown error in __restoreScript",True)
+            raise defaultError("unkown error in %s"%(self.thisMethode()),True)
         
     def restoreScript(self,scriptName,script,forceUpdate=False):
         '''
@@ -78,7 +84,7 @@ class scriptManager():
             self.__restoreScript(scriptName, script)
             self.updateRemoteCore(forceUpdate,scriptName,'restoreScript',scriptName,script)
         except:
-            raise defaultError("unknown error in restoreScript",True)
+            raise defaultError("unkown error in %s"%(self.thisMethode()),True)
         
     def _writeScriptConfiguration(self,fileNameABS):
         '''
@@ -105,7 +111,7 @@ class scriptManager():
                 scriptCFG[scriptID]=self.scripts[scriptID]
             self.writeJSON(fileNameABS,scriptCFG)
         except:
-            raise defaultError("can't write script configuration",True) 
+            raise defaultError("unkown error in %s"%(self.thisMethode()),True)
     
     def _loadScriptConfiguration(self,fileNameABS):
         '''
@@ -143,7 +149,7 @@ class scriptManager():
                 except:
                     LOG.critical("unkown error at restoreScript",exc_info=True)
         except:
-            raise defaultError("can't read script configuration",True)
+            raise defaultError("unkown error in %s"%(self.thisMethode()),True)
         
     def runScript(self,scriptName,script=None,callerObject=None,callerVars={},programDeep=0,forceUpdate=False):
         try:
@@ -174,14 +180,14 @@ class scriptManager():
         except (defaultError,cmdError,testError) as e:
             raise e
         except:
-            raise defaultError("unknown error in runScript",True)
+            raise defaultError("unkown error in %s"%(self.thisMethode()),True)
    
     def deleteScript(self,scriptName,forecUpdate=False):
         try:
-            pass
+            self.__deleteScript(scriptName)
             self.updateRemoteCore(forecUpdate,scriptName,'deleteScript',scriptName)
         except:
-            raise defaultError("unknown error in deleteScript",True)
+            raise defaultError("unkown error in %s"%(self.thisMethode()),True)
     
     def __deleteScript(self,scriptName):
         try:
@@ -190,7 +196,7 @@ class scriptManager():
             LOG.info("delete script %s"%(scriptName))
             del self.scripts[scriptName]
         except:
-            raise defaultError("unknown error in __deleteScript",True)
+            raise defaultError("unkown error in %s"%(self.thisMethode()),True)
 
     
     
