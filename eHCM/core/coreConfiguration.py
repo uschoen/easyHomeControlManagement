@@ -126,14 +126,7 @@ class coreConfiguration():
                 self._loadDeviceConfiguration(fileNameABS)
             except:
                 LOG.error("can't load device file %s"%(fileNameABS),exc_info=False)
-            ##########
-            # cluster
-            ##########
-            try:
-                fileNameABS="%s/%s"%(path,self.args['configuration']['files']['cluster'])
-                self._loadClusterConfiguration(fileNameABS)
-            except:
-                LOG.error("can't load cluster configuration file %s"%(fileNameABS),exc_info=False)
+            
             ##########
             # module
             ##########
@@ -142,6 +135,14 @@ class coreConfiguration():
                 self._loadModulConfiguration(fileNameABS)
             except:
                 LOG.error("can't load module file %s"%(fileNameABS),exc_info=False)
+            ##########
+            # cluster
+            ##########
+            try:
+                fileNameABS="%s/%s"%(path,self.args['configuration']['files']['cluster'])
+                self._loadClusterConfiguration(fileNameABS)
+            except:
+                LOG.error("can't load cluster configuration file %s"%(fileNameABS),exc_info=False)
         except:
             raise defaultEXC("some error, can't loadAllConfiguration from filesystem")
     
