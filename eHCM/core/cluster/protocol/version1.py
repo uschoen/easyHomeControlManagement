@@ -120,7 +120,7 @@ class version1:
             commadsArgs=self.__getCommandRequest(clientSocket,self.__crypt, self.__config['user'],self.__config['password'])
             
             if commadsArgs['callFunction'] not in ALLOWED_FUNCTIONS:
-                error="callfunction %s not allowed"%(commadsArgs['callFunction'])
+                error="call function [%s] not allowed"%(commadsArgs['callFunction'])
                 self.__sendResult(clientSocket,self.__crypt,self.__config['user'],self.__config['password'],result="error",message=error)   
                 raise protocolException(error,False)
             
