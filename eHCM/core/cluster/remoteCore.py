@@ -218,6 +218,7 @@ class remoteCore(threading.Thread):
             self.__syncCoreModule()
             self.__syncCoreDevices()
             self.__syncCoreCluster()
+            self.__syncCoreScripts()
             while not self.coreStatusSync:
                 if self.__syncQueue.empty():
                     break
@@ -240,7 +241,25 @@ class remoteCore(threading.Thread):
         '''
         LOG.info("core client to core %s is syncron"%(self.coreName))
         self.coreStatusSync=True
-        
+    
+    def __syncCoreScripts(self):
+        '''
+        sync all core scripts from this host
+        '''
+        try:
+            LOG.info("sync core scripts to host %s"%(self.coreName))
+            for coreScripts in self.core.scripts:
+                if not self.core.ifonThisHost(coreScripts):
+                    continue
+                args=(coreScripts,self.core.scripts[coreScripts])
+                updateObj={
+                            'objectID':coreScripts,
+                            'callFunction':'addScript',
+                            'args':args}
+                self.__syncQueue.put(updateObj)
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.core.thisMethode()),True)
+          
     def __syncCoreCluster(self):
         '''
         sync all core clients from this host
