@@ -27,6 +27,10 @@ class coreModule():
     core modul function
     '''
     def __init__(self,*args):
+        
+        '''
+            self.module to store the module intance
+        '''
         self.module={}
         
         LOG.info("init core module finish, version %s"%(__version__))
@@ -55,7 +59,7 @@ class coreModule():
                             "enable":self.module[modulName].get('enable',False),
                             "modulPackage":self.module[modulName].get('modulPackage',False),
                             "modulClass":self.module[modulName].get('modulClass',False),
-                            "config":self.module[modulName]["instance"].getConfiguration()
+                            "config":self.module[modulName].get('config',{}),
                             }
             self.writeJSON(fileNameABS,modulCFG)
         except (Exception) as e:
@@ -164,14 +168,34 @@ class coreModule():
         except:
             del self.module[objectID]
             raise defaultEXC("some errer delete modul %s hard"%(objectID),True)
+    
+    def restoreModul(self,objectID,modulCFG={},forceUpdate=False):
+        '''
+                internale funtion to restore a Module
+            
+                objectID: Module ID
+                modulfCFG    dict, modul configuration
+                            modulCFG={  "config": {},
+                                        "enable": false,
+                                        "modulClass": "xml_api",
+                                        "modulPackage": "homematic",
+                                        "startable": false
+                                    }
+                exception: defaultEXC
+        '''
+        try:
+            self.__restoreModul(objectID, modulCFG)
+            self.updateRemoteCore(forceUpdate,objectID,self.thisMethode,objectID,modulCFG)
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode()),True)
         
     def __restoreModul(self,objectID,modulCFG):
             '''
-            restor a Module
+                internale funtion to restore a Module
             
-            objectID: Module ID
+                objectID: Module ID
             
-            exception: defaultEXC
+                exception: defaultEXC
             '''
             try:
                 LOG.info("try to restore Module %s"%(objectID))
