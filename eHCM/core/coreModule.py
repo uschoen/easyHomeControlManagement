@@ -169,6 +169,23 @@ class coreModule():
             del self.module[objectID]
             raise defaultEXC("some errer delete modul %s hard"%(objectID),True)
     
+    def getModulConfiguration(self,objectID):
+        '''
+            update a Core connectorget the configuration from a modul back
+            
+            objectID:      core objectID
+            
+            return: dict
+            
+            exception: clusterException
+        '''
+        if objectID not in self.module:
+            raise defaultEXC("can't find modul: %s"%(objectID))
+        try:
+            return self.module[objectID]['config']
+        except:
+            raise defaultEXC("some unkown error in %s"%(self.thisMethode()),True)
+        
     def restoreModul(self,objectID,modulCFG={},forceUpdate=False):
         '''
                 internale funtion to restore a Module
