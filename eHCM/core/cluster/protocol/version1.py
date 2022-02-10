@@ -30,7 +30,8 @@ ALLOWED_FUNCTIONS={
                     'updateCoreConnector',
                     'setDeviceChannelValue',
                     'restoreDevice',
-                    'restoreModul,'
+                    'restoreModul,',
+                    'addScript'
                 }
 
 DEFAULT_CFG={
