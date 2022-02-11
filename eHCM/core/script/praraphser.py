@@ -199,6 +199,9 @@ class praraphser():
             if not modulName in self.core.module:
                 raise cmdError("modul %s is not existing"%(modulName))
             
+            if self.core.module[modulName]['enable']==False:
+                raise cmdError("modul %s is disable in core"%(modulName))
+            
             if "arguments" in strg:
                 # agruments [optional]
                 arguments={'arguments':strg.get('arguments')}
