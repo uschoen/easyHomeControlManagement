@@ -262,8 +262,8 @@ class remoteCore(threading.Thread):
         try:
             LOG.info("sync core cluster to host %s"%(self.coreName))
             for coreName in self.core.coreCluster:
-                if not self.core.ifonThisHost(coreName):
-                    continue
+                #if not self.core.ifonThisHost(coreName):
+                #   continue
                 args=(coreName,self.core.coreCluster[coreName]['config'])
                 updateObj={
                             'objectID':coreName,
