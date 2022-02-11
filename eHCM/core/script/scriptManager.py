@@ -171,7 +171,7 @@ class scriptManager():
                             programDeep=programDeep)
                 return p
             else:
-                LOG.debug("script %s is not at this host %s"%(scriptName.self.host))
+                LOG.debug("script %s is not at this host %s"%(scriptName,self.host))
                 '''
                 update remote core
                 '''
