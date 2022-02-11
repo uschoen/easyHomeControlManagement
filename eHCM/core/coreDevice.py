@@ -47,12 +47,7 @@ class coreDevices():
                                deviceCFG,
                                restore
                                )
-            self.updateRemoteCore(forceUpdate,
-                                  objectID,
-                                  self.thisMethode(),
-                                  objectID,
-                                  deviceCFG
-                                  )
+            self.updateRemoteCore(forceUpdate,objectID,self.thisMethode(),objectID,deviceCFG)
         
         except:
             raise defaultEXC("can't restore deviceID %s with package %s and type: %s"%(objectID))
