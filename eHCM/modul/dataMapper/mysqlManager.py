@@ -19,6 +19,7 @@ from core.exception import defaultEXC
 from modul.defaultModul import defaultModul
 # Standard library imports
 import logging
+import time
 try:
     import mysql.connector                                                         #@UnresolvedImport
     from mysql.connector import Error                                              #@UnresolvedImport,@UnusedImport
@@ -85,6 +86,12 @@ class mysqlManager(defaultModul,object):
             
             ''' db connection object '''
             self.__dbConnection=False
+            
+            '''
+                block the connector for muli thrading
+            '''
+            self.__isBlock=False
+            
             LOG.info("build mysqlMapper , version:%s"%(__version__))
         except:
             raise defaultEXC("can't build modul mysqlMapper version:%s"%(__version__),True)
@@ -107,15 +114,22 @@ class mysqlManager(defaultModul,object):
             sql=""
             self.__buildSQL(self.config['mapping'])    
             
+            while not self.__isBlock:
+                time.sleep(0.5)
+            self.__isBlock=True
             # check if dbconnection ready
             if not self.__dbConnection:
                 self.__dbConnect(self.config['database'])
             sql=self.__buildSQL(self.config["mapping"])
             self.__sqlExecute(sql)
+            self.__isBlock=False
         except defaultEXC as e:
+            self.__isBlock=False
             LOG.critical("error in mysqlMapper: %s with error:%s"%(self.config['name'],e))   
         except:
+            self.__isBlock=False
             LOG.critical("unkown error in modul %s"%(self.config['name']),True)
+            
            
         
     def stop(self):
