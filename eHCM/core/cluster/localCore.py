@@ -3,6 +3,7 @@ Created on 08.02.2022
 
 @author: uschoen
 '''
+from copy import deepcopy
 
 
 __version__='9.0'
@@ -14,6 +15,7 @@ import threading
 import time
 import socket
 
+
 # local library imports
 from core.exception import defaultEXC
 
@@ -23,14 +25,6 @@ from .protocol.version1  import version1
 from .protocol.protocolException import protocolException
 from .protocol.encryption.cryptException import cryptException
 
-CORE_PROTOCOL={
-             1:version1
-            }
-
-DEFAULT_CFG={"blocked":60,
-             "enable":False,
-             "port":9000,
-             "protocol":{"version":1}}
 
 LOG=logging.getLogger(__name__) 
 
@@ -64,8 +58,12 @@ class localCore(threading.Thread):
         '''
             connector cfg
         '''
-        self.__config=DEFAULT_CFG
-        self.__config.update(cfg)
+        self.__config={ "blocked":60,
+                        "enable":False,
+                        "port":9000,
+                        "protocol":{"version":1}
+                    }
+        self.__config.update(deepcopy(cfg))
         
         ''' core block for x sec'''
         self.__blockTime=0
@@ -85,7 +83,7 @@ class localCore(threading.Thread):
         if not self.__config['protocol']['version'] in self.__coreProtocol:
             LOG.error("protocolVersion %s is not avaible option, set to verion 1"%(self.__config['protocol']['version']))
             self.__config['protocol']['version']=1 
-        self.__remoteCoreprotocol=False
+        
         
         LOG.info("init new local core server %s version %s"%(self.coreName,__version__))
 
@@ -110,9 +108,10 @@ class localCore(threading.Thread):
                                 ClientIP=ipAddr[0]
                                 networkSocket.settimeout(None)
                                 if not self.core.ifKnownCoreClient(ClientIP):
-                                    raise defaultEXC("unkown client was try to connect")
+                                    raise defaultEXC("unkown client was try to connect from %s"%(ClientIP))
                                 LOG.debug("get connection from %s on local core server %s"%(ClientIP,self.coreName))
-                                threading.Thread(target=self.__clientRequest,args = (clientSocket,ClientIP)).start()
+                                remoteCoreprotocol=version1(self.core,self.__config['protocol'],self.running)
+                                threading.Thread(target=self.__clientRequest,args = (clientSocket,ClientIP,remoteCoreprotocol)).start()
                             except (socket.timeout):
                                 pass
                             except Exception as e:
@@ -195,7 +194,7 @@ class localCore(threading.Thread):
         
         LOG.warning("close local core socket %s from %s ip"%(self.coreName,clientIP))
     
-    def __clientRequest(self,clientSocket,remoteCoreIP):
+    def __clientRequest(self,clientSocket,remoteCoreIP,remoteCoreprotocol):
         '''
             get a client request from remote core
             
@@ -206,8 +205,6 @@ class localCore(threading.Thread):
         '''
         try:
             LOG.debug("get new client request from %s on %s"%(remoteCoreIP,self.coreName))
-            protocolCFG=self.__config['protocol']
-            remoteCoreprotocol=CORE_PROTOCOL[self.__config['protocol']['version']](self.core,protocolCFG,self.running)
             while self.running and not self.ifShutdown:
                 remoteCoreprotocol.reciveData(clientSocket,remoteCoreIP)
         
@@ -216,7 +213,6 @@ class localCore(threading.Thread):
         except:
             LOG.warning("unkown error  on local core %s from remote ip %s "%(self.coreName,remoteCoreIP),exc_info=True)
         LOG.debug("close client request from %s on %s"%(remoteCoreIP,self.coreName))
-        self.__remoteCoreprotocol=False
         self.__closeSocket(clientSocket,remoteCoreIP)     
     
     def __buildSocket(self,ip,port):

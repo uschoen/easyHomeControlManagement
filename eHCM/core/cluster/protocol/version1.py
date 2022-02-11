@@ -3,6 +3,7 @@ Created on 01.12.2018
 
 @author: uschoen
 '''
+from copy import deepcopy
 
 
 
@@ -12,7 +13,7 @@ __author__ = 'ullrich schoen'
 # Standard library imports
 import logging
 import socket
-
+import random
 # Local application imports
 from .encryption.aes import aes
 from .encryption.plain import plain
@@ -35,12 +36,6 @@ ALLOWED_FUNCTIONS={
                     'restoreModul'
                 }
 
-DEFAULT_CFG={
-            "debug":False,
-            "cryptType":"plain",
-            "user":"unkown",
-            "password":"secret"
-             }
 
 ENDMARKER=b'<<stop>>!!!'
 BUFFER=512
@@ -76,8 +71,14 @@ class version1:
         ''' 
             configuration 
         '''
-        self.__config=DEFAULT_CFG 
-        self.__config.update(cfg)
+        self.__config={
+            "debug":False,
+            "cryptType":"plain",
+            "user":"unkown",
+            "password":"secret"
+             }
+ 
+        self.__config.update(deepcopy(cfg))
         
         ''' 
             is running 
@@ -95,6 +96,9 @@ class version1:
         '''
         self.__lastMSG=b''
         
+        self.__msgID=0
+        self.__fixMSG=int(random.uniform(100,999))
+        
         '''
             check if the right encryption modul in configuration (cryptType). 
             default set to plain. Build encryption object in self.__crypt
@@ -103,7 +107,7 @@ class version1:
             LOG.error("%s is not avaible option for encoding, use plain now"%(self.__config["cryptType"]))
             self.__config["cryptType"]="plain"
         self.__crypt=ENCRYPTION[self.__config["cryptType"]]()
-        LOG.info("init protokol version 1 finish, version %s"%(__version__))     
+        LOG.info("init protokol version 1 finish, version %s"%(__version__)) 
     
     def reciveData(self,clientSocket,remoteCoreIP):
         '''
@@ -117,18 +121,18 @@ class version1:
             return:
         '''
         try:
-            commadsArgs=self.__getCommandRequest(clientSocket,self.__crypt, self.__config['user'],self.__config['password'])
+            (commadsArgs,headerData)=self.__getCommandRequest(clientSocket,self.__crypt, self.__config['user'],self.__config['password'])
             
             if commadsArgs['callFunction'] not in ALLOWED_FUNCTIONS:
-                error="call function [%s] not allowed"%(commadsArgs['callFunction'])
+                error="massageID:%s function [%s] not allowed"%(headerData["msgID"],commadsArgs['callFunction'])
                 self.__sendResult(clientSocket,self.__crypt,self.__config['user'],self.__config['password'],result="error",message=error)   
                 raise protocolException(error,False)
             
             try:
-                LOG.debug("call function %s for %s"%(commadsArgs['callFunction'],commadsArgs['objectID']))
+                LOG.debug("get massageID:%s, user:%s call function %s ( %s )"%(headerData["msgID"],headerData["user"],commadsArgs['callFunction'],commadsArgs['objectID']))
                 methodToCall = getattr(self.__core,commadsArgs['callFunction'])
             except:
-                error="callfunction %s not found"%(commadsArgs['callFunction'])
+                error="massageID:%s callfunction %s not found"%(headerData["msgID"],commadsArgs['callFunction'])
                 self.__sendResult(clientSocket,self.__crypt,self.__config['user'],self.__config['password'],result="error",message=error)   
                 raise protocolException(error,False)
             
@@ -139,7 +143,7 @@ class version1:
                 self.__sendResult(clientSocket,self.__crypt,self.__config['user'],self.__config['password'],result="ok")   
             except (Exception) as e:
                 self.__sendResult(clientSocket,self.__crypt,self.__config['user'],self.__config['password'],result="error",message="%s"%(e))   
-                raise protocolException("can't call function %s: (%s)"%(commadsArgs['callFunction'],commadsArgs),True)
+                raise protocolException("massageID:%s, can't call function %s: (%s)"%(headerData["msgID"],commadsArgs['callFunction'],commadsArgs),True)
              
         except (protocolException,cryptException) as e:
             raise e   
@@ -156,6 +160,7 @@ class version1:
             exception:protocolException,cryptException
         '''
         try:
+            self.__msgID=self.__msgID+1
             self.__sendCommandRequest(clientSocket,self.__crypt,self.__config["user"],self.__config["password"],jobQueue)   
             self.__checkCommandResponse(clientSocket, self.__crypt, self.__config["user"],self.__config["password"])
         except (protocolException,cryptException) as e:
@@ -230,7 +235,7 @@ class version1:
         try:
             body=self.__buildBody(encryption,job,password)
             commandString=self.__buildHeader(encryption, user, body)
-            LOG.debug("send call function %s for objectID %s"%(job['callFunction'],job['objectID']))
+            LOG.debug("send massageID %s:%s function %s ( %s )"%(self.__fixMSG,self.__msgID,job['callFunction'],job['objectID']))
             self.__writeSocket(networkSocket,commandString)
         except (protocolException,cryptException) as e:
             raise e
@@ -254,7 +259,7 @@ class version1:
             ''' read network socket '''
             LOG.debug("waiting for next command request")
             readData=self.__readSocket(clientSocket)
-            LOG.debug("get Request")
+            #LOG.debug("get Request")
          
             ''' check resived data '''
             readVars=encryption.unSerialData(readData)
@@ -266,7 +271,7 @@ class version1:
                 raise protocolException("protocol error, no callFunction",False)
             if decryptBodyVars.get('args',None)==None:
                 raise protocolException("protocol error, no args",False)
-            return (decryptBodyVars)
+            return (decryptBodyVars,readVars.get("header",{}))
         except (cryptException) as e:
             raise cryptException("encrption error:%s"%(e.msg))
         except (protocolException) as e:
@@ -290,7 +295,6 @@ class version1:
             readData=self.__readSocket(networkSocket)
             ''' check resived data '''
             readVars=encryption.unSerialData(readData)
-            self.__checkHeader(readVars.get("header",{}),user)            
             decryptBodyVars=self.__decryptBody(readVars.get("body",{}),encryption,password)
             self.__checkResult(decryptBodyVars)
         except (protocolException,cryptException) as e:
@@ -353,8 +357,10 @@ class version1:
             header={
                 'header':{
                     'user':user,
-                    'protocol':__protocolVersion__},
-                'body':body
+                    'msgID':"%s:%s"%(self.__fixMSG,self.__msgID),
+                    'protocol':__protocolVersion__
+                    },
+                    'body':body
                 }
             header=encryption.serialData(header)
             return header
@@ -369,6 +375,8 @@ class version1:
             header:{
                     "protocol": __protocolVersion__,
                     "user": self.__config['user']
+                    "msgID": number per command
+                   
                     }
             user: username       
         '''

@@ -3,7 +3,7 @@ Created on 08.02.2022
 
 @author: uschoen
 '''
-
+from copy import deepcopy
 
 __version__='9.0'
 __author__ = 'ullrich schoen'
@@ -20,15 +20,6 @@ from core.exception import defaultEXC
 from .protocol.version1  import version1
 from .protocol.protocolException import protocolException
 from .protocol.encryption.cryptException import cryptException
-
-CORE_protocol={
-             1:version1
-            }
-
-DEFAULT_CFG={"blocked":60,
-             "enable":False,
-             "port":9000,
-             "protocol":{"version":1}}
 
 LOG=logging.getLogger(__name__) 
 
@@ -64,8 +55,12 @@ class remoteCore(threading.Thread):
         '''
             connector cfg
         '''
-        self.__config=DEFAULT_CFG
-        self.__config.update(cfg)
+        self.__config={ "blocked":60,
+                        "enable":False,
+                        "port":9000,
+                        "protocol":{"version":1}
+                    }
+        self.__config.update(deepcopy(cfg))
         
         '''
             connector running
@@ -108,9 +103,8 @@ class remoteCore(threading.Thread):
             LOG.error("protocolVersion %s is not avaible option, set to verion 1"%(self.__config['protocol']['version']))
             self.__config['protocol']['version']=1 
         self.__remoteCoreProtocol=False
-        
         LOG.info("init new remote core server %s version %s"%(self.coreName,__version__))
-
+        
     def run(self):
         try:
             LOG.info("%s start"%(self.coreName))
@@ -120,11 +114,12 @@ class remoteCore(threading.Thread):
                     try:
                         if self.__blockTime<int(time.time()):
                             if not self.__remoteCoreProtocol:
-                                self.__remoteCoreProtocol=self.__coreProtocol[self.__config['protocol']['version']](self.core,self.__config['protocol'],self.running)
+                                self.__remoteCoreProtocol=version1(self.core,self.__config['protocol'],self.running)
                                 self.__networkSocket=self.__buildSocket(self.__config["ip"],self.__config['port'])
                                 self.__syncRemoteCore()
                             if not self.__coreQueue.empty():
-                                self.__workingQueue(self.__networkSocket,self.__coreQueue)    
+                                self.__workingQueue(self.__networkSocket,self.__coreQueue) 
+                        time.sleep(1)   
                     except (defaultEXC,protocolException,cryptException):
                         self.__blockServer()
                         self.__remoteCoreProtocol=False   
