@@ -173,7 +173,7 @@ class coreConfiguration():
             LOG.info("save core configuration file %s"%(fileNameABS))
             self.writeJSON(fileNameABS,CFGfile)
         except:
-            raise defaultEXC("can't write core configuration")
+            raise defaultEXC("can't write core configuration %s in %s"%(fileNameABS,self.thisMethode()),True)
         
     def _loadCoreConfiguration(self,fileNameABS):
         '''
