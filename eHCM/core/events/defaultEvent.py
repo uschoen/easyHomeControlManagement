@@ -20,12 +20,6 @@ from copy import deepcopy
 from core.events.exception import eventError
 from core.manager import manager
 
-DEFAULT_CALLER={
-    "args":None,
-    "callFunction":None,
-    "enable":False
-    }
-
 LOG=logging.getLogger(__name__)
 
 
@@ -49,7 +43,11 @@ class defaultEvent(object):
     restore= true/false    default false
     '''
     eventName="defaultEvent"
-    
+    DEFAULT_CALLER={
+        "args":None,
+        "callFunction":None,
+        "enable":False
+    }
     def __init__(self,eventCFG={},restore=False):
         
         self.callers={}
@@ -118,7 +116,8 @@ class defaultEvent(object):
         callers = dic            Caller an parameters
                                  "mysql"{
                                         "caller":None,
-                                        "parameter":None
+                                        "args":None,
+                                        enable":true
                                         }
         exception: eventError
         '''
@@ -142,14 +141,15 @@ class defaultEvent(object):
         callerCFG = dic            configurtion of the caller
                                    {
                                     "caller":None,
-                                    "parameter":None
+                                    "args":None,
+                                    "enable:" true
                                    }
         
         exception: eventError
         '''
         try:
             if callerName not in self.callers:
-                self.callers[callerName]=DEFAULT_CALLER
+                self.callers[callerName]=self.DEFAULT_CALLER
             self.callers[callerName].update(callerCFG)
             LOG.debug("update event %s caller: %s"%(self.eventName,callerName))
         except:

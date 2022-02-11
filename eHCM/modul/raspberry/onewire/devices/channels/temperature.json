@@ -1,5 +1,5 @@
 {
-    "CFGVersion": "8.0",
+    "CFGVersion": "9.0",
     "channelPackage": "raspberry.onewire",
     "channelType": "temperature",
     "events": {},
