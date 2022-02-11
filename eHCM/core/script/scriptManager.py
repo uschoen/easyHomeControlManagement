@@ -177,8 +177,8 @@ class scriptManager():
                 '''
                 self.updateRemoteCore(forceUpdate,scriptName,self.thisMethode,scriptName,script,callerObject,callerVars,programDeep)
 
-        except (defaultError,cmdError,testError) as e:
-            raise e
+        except (defaultError,cmdError,testError):
+            LOG.critical("cant't run script %s"%(scriptName))
         except:
             raise defaultError("unkown error in %s"%(self.thisMethode()),True)
    

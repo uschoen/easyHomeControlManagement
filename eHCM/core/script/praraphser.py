@@ -106,6 +106,8 @@ class praraphser():
         except (testError) as e:
             LOG.critical("test of the script failed")
             return False
+        except (cmdError) as e:
+            LOG.critical("command error: %s"%(e))
         except (defaultError) as e:
             LOG.critical("error in Script: %s"%(e))
         except: 
@@ -167,9 +169,9 @@ class praraphser():
         except (testError) as e:
             LOG.critical("test for script have some error: %s"%(e))
         except (cmdError) as e:
-            LOG.critical("script error in script: %s"%(e))
-        except (Exception) as e:
-            raise defaultError("unkoun error in loop %s"%(e),True) 
+            raise e
+        except:
+            raise defaultError("unkown error in loop",True) 
     
     def __callModul(self,strg={},cmd="callModul"):
         """
@@ -218,10 +220,10 @@ class praraphser():
                     LOG.debug("call core modul:%s function:%s"%(modulName,callerFunction))
                     value=getattr(self.core.module[modulName]['instance'], callerFunction)()
             return value
-        except (defaultEXC) as e:
-            raise defaultError("can't run modul:%s"%(e))
         except (defaultError,cmdError) as e:
             raise e
+        except (defaultEXC) as e:
+            raise defaultError("can't run modul:%s"%(e))
         except:
             if (self.cfg['test']):
                 raise testError("callModul of the script failed")

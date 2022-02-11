@@ -21,8 +21,9 @@ from core.events.exception import eventError
 from core.manager import manager
 
 DEFAULT_CALLER={
-    "caller":None,
-    "parameter":None
+    "args":None,
+    "callFunction":None,
+    "enable":False
     }
 
 LOG=logging.getLogger(__name__)
@@ -149,7 +150,7 @@ class defaultEvent(object):
         try:
             if callerName not in self.callers:
                 self.callers[callerName]=DEFAULT_CALLER
-            self.callers[callerName]=callerCFG
+            self.callers[callerName].update(callerCFG)
             LOG.debug("update event %s caller: %s"%(self.eventName,callerName))
         except:
             raise eventError("some error in updateCaller",True)
@@ -177,6 +178,9 @@ class defaultEvent(object):
         try:
             for caller in self.callers:
                 try:
+                    if  not self.callers[caller].get('enable',False):
+                        LOG.info("caller %s is disable"%(caller))
+                        continue
                     callerArgs=self.callers[caller]
                     LOG.debug("executeCaller %s with arg: %s"%(caller,callerArgs))
                     self.executeCaller(callerArgs,callerObject)
@@ -192,6 +196,7 @@ class defaultEvent(object):
         dict args={
                     "callFuntion":funktion name,
                     "args": arguments
+                    "enable": true false
                   }
         object callerObject: the object have init the event
         
