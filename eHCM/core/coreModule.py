@@ -49,22 +49,7 @@ class coreModule():
                 "from":int(time.time())
             }
             for modulName in self.module:
-                '''
-                @todo: if modul loading faild you can not retrive the Configuartion of the modul
-                via getConfiguration, because no intance is avaibel.
-                change this 
-                '''
-                modulCFG[modulName]={
-                            "startable":self.module[modulName].get('startable',False),
-                            "enable":self.module[modulName].get('enable',False),
-                            "modulPackage":self.module[modulName].get('modulPackage',False),
-                            "modulClass":self.module[modulName].get('modulClass',False)
-                            }
-                if self.ifonThisHost(modulName):
-                    modulCFG[modulName]['config']=self.module[modulName]['instance'].getConfiguration()
-                else:
-                    modulCFG[modulName]['config']=self.module[modulName]['config']
-                    
+                modulCFG[modulName]=self.getModulConfiguration(modulName)    
             self.writeJSON(fileNameABS,modulCFG)
         except (Exception) as e:
             raise defaultEXC("can't _writeModulConfiguration: %s"%(e)) 
@@ -199,12 +184,20 @@ class coreModule():
         if objectID not in self.module:
             raise defaultEXC("can't find modul: %s"%(objectID))
         try:
+            '''
+                @todo: if modul loading faild you can not retrive the Configuartion of the modul
+                via getConfiguration, because no intance is avaibel.
+                change this 
+            '''
             cfg={"startable":self.module[objectID].get('startable',False),
                  "enable":self.module[objectID].get('enable',False),
                  "modulPackage":self.module[objectID].get('modulPackage',False),
                  "modulClass":self.module[objectID].get('modulClass',False),
-                 "config":self.module[objectID]['instance'].getConfiguration()
             }
+            if self.ifonThisHost(objectID):
+                cfg['config']=self.module[objectID]['instance'].getConfiguration()
+            else:
+                cfg['config']=self.module[objectID]['config']
             return cfg
         except:
             raise defaultEXC("some unkown error in %s"%(self.thisMethode()),True)
