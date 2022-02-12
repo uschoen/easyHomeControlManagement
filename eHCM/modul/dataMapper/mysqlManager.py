@@ -84,13 +84,6 @@ class mysqlManager(defaultModul,object):
                "callerValues":self.__callerValues
             }
             
-            ''' db connection object '''
-            self.__dbConnection=False
-            
-            '''
-                block the connector for muli thrading
-            '''
-            self.__isBlock=False
             
             LOG.info("build mysqlMapper , version:%s"%(__version__))
         except:
@@ -107,31 +100,24 @@ class mysqlManager(defaultModul,object):
         exception: NONE
         '''
         try:
-            LOG.debug("call update from MysqlMapper with args %s"%(values))
+            LOG.info("call update from MysqlMapper with args %s"%(values))
             self.__callerARGS.update(values)
             
                 
             sql=""
-            self.__buildSQL(self.config['mapping'])    
-            
-            while not self.__isBlock:
-                time.sleep(0.5)
-            self.__isBlock=True
-            # check if dbconnection ready
-            if not self.__dbConnection:
-                self.__dbConnect(self.config['database'])
+               
+            dbConnection=self.__dbConnect(self.config['database'])
             sql=self.__buildSQL(self.config["mapping"])
-            self.__sqlExecute(sql)
-            self.__isBlock=False
+            self.__sqlExecute(dbConnection,sql)
+            self.__dbClose(dbConnection)
+            LOG.debug("call update from MysqlMapper finish")
         except defaultEXC as e:
-            self.__isBlock=False
+            self.__dbClose(dbConnection)
             LOG.critical("error in mysqlMapper: %s with error:%s"%(self.config['name'],e))   
         except:
-            self.__isBlock=False
+            self.__dbClose(dbConnection)
             LOG.critical("unkown error in modul %s"%(self.config['name']),True)
-            
-           
-        
+    
     def stop(self):
         LOG.error("modul %s is stop"%(self.config['name'])) 
     
@@ -143,7 +129,7 @@ class mysqlManager(defaultModul,object):
             pass
         LOG.error("modul %s is shutdown"%(self.config['name']))       
                   
-    def __sqlExecute(self,sql):
+    def __sqlExecute(self,dbConnection,sql):
         """
         excecute a sql statment
          
@@ -154,16 +140,16 @@ class mysqlManager(defaultModul,object):
         """
         try:
             LOG.debug("sqlExecute: %s"%(sql))
-            
-            cursor  = self.__dbConnection.cursor()
+            cursor  = dbConnection.cursor()
             cursor.execute(sql)
-            self.__dbConnection.commit()  
+            dbConnection.commit()  
+            cursor.close()
         except (mysql.connector.Error) as e:
             raise defaultEXC("mysql error %s"%(e))
         except :
             raise defaultEXC("unkown error sql:%s"%(sql),True)    
     
-    def __dbClose(self):
+    def __dbClose(self,dbConnection):
         '''
         
         close the database connection
@@ -175,10 +161,10 @@ class mysqlManager(defaultModul,object):
         exception: none
         '''
         try:
-            if self.__dbConnection:
+            if dbConnection:
                 LOG.info("close database")
-                self.__dbConnection=False
-                self.__dbConnection.close()
+                dbConnection=False
+                dbConnection.close()
                
         except:
             pass
@@ -200,16 +186,17 @@ class mysqlManager(defaultModul,object):
         '''
         LOG.info("try connect to host:%s:%s with user:%s table:%s"%(cfg['host'],cfg['port'],cfg['user'],cfg['database']))
         try:
-            self.__dbConnection = mysql.connector.connect(**cfg)
+            dbConnection = mysql.connector.connect(**cfg)
                                                 
-            #self.__dbConnection.apilevel = "2.0"
-            #self.__dbConnection.threadsafety = 3
-            #self.__dbConnection.paramstyle = "format" 
-            #self.__dbConnection.autocommit=True
+            #dbConnection.apilevel = "2.0"
+            dbConnection.threadsafety = 2
+            #dbConnection.paramstyle = "format" 
+            #dbConnection.autocommit=True
             LOG.info("mysql connect succecfull")
+            return dbConnection
         except (mysql.connector.Error) as e:
-            self.__dbClose()  
-            self.__dbConnection=False
+            self.__dbClose(dbConnection)  
+            dbConnection=False
             raise defaultEXC("can't not connect to database: %s"%(e))
         except:
             raise defaultEXC("unkown error in modul %s"%(self.config['name']),True)
