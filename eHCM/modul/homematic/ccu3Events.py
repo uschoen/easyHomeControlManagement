@@ -27,50 +27,43 @@ __author__ = 'ullrich schoen'
 
 # Standard library imports
 import logging
-import xmlrpc.client 
 from xmlrpc.server import SimpleXMLRPCServer           #@UnresolvedImport
 from xmlrpc.server import SimpleXMLRPCRequestHandler   #@UnresolvedImport @UnusedImport
 import threading
-from random import randint
+import random 
+import string
 from time import time,sleep
 
 
 # Local application imports
 from modul.defaultModul import defaultModul
 from core.exception import defaultEXC
-from modul.homematic.ccu3RPCrequest import ccu3RPCrequest
-from modul.homematic.xml_api import xml_api
+from modul.homematic.ccu3RPCServer import ccu3RPCServer
+from modul.homematic.ccu3XML import ccu3XML
+from modul.homematic.ccu3Commands import ccu3Commands
 
 LOG=logging.getLogger(__name__)
-DEVICE_IGNORE_FIELD=["PARAMSETS","CHILDREN"]            
-
-DEVICE_MAPPING_FIELDS={"TYPE":"deviceType",
-                "RF_ADDRESS":"rfAddress"}
-
-CHANNEL_IGNORE_FIELD=["ADDRESS","PARAMSETS","PARENT","PARENT_TYPE"]            
-
-CHANNEL_MAPPING_FIELDS={"AES_ACTIVE":"aesActive",
-                        "TYPE":"channelType"}
 
 
 MODUL_PACKAGE="homematic"
+RPC_PORT_START=9000
                        
 DEFAULT_CFG={
     "MSGtimeout":60,
     "blockRPCServer":60,
-    "server":{
-            "rpcPort":"9999",
-            "ccu3IP":"127.0.0.1",
-            "ccu3Port":"2000"
-            },
+    "ccuIP":{
+        "ccu3IP":"127.0.0.1",
+        "ccu3Port":"2000"
+    },
     "ccu3XML":{
-            "hmHost":"http://127.0.0.1",            
-            "https":False,                          
-            "url":"/config/xmlapi/statechange.cgi"
-            },
+        "hmHost":"http://127.0.0.1",            
+        "https":False,                          
+        "url":"/config/xmlapi/statechange.cgi"
+    },
     "ise_ID":"0",
     "value":"0"
     }
+
 LOOP_SLEEP=1
 
 class ccu3Events(defaultModul):
@@ -87,16 +80,15 @@ class ccu3Events(defaultModul):
         cfg={
             "MSGtimeout":60,
             "blockRPCServer":60,
-            "server":{
-                    "rpcPort":"9999",
-                    "ccu3IP":"127.0.0.1",
-                    "ccu3Port":"2000"
-                    },
+            "ccuIP":{
+                "ccu3IP":"127.0.0.1",
+                "ccu3Port":"2000"
+            },
             "ccu3XML":{
-                    "hmHost":"http://127.0.0.1",            
-                    "https":False,                          
-                    "url":"/config/xmlapi/statechange.cgi"
-                    },
+                "hmHost":"http://127.0.0.1",            
+                "https":False,                          
+                "url":"/config/xmlapi/statechange.cgi"
+            },
             "ise_ID":"0",
             "value":"0"
             }
@@ -118,7 +110,7 @@ class ccu3Events(defaultModul):
         """
         container for the rpc server  
         """
-        self.rpcServerINST=False
+        self.__rpcServerINST=False
         
         """
         container for the rpc server thread 
@@ -134,71 +126,71 @@ class ccu3Events(defaultModul):
         self.running=True
         
         """
-        store the device
+        Client Interface ID
         """
-        self.device={}
-        """
-        RPC Proxy
-        """
-        self.rpcProxy=False
+        self.__interfaceID="%s%s"%(''.join(random.sample(string.ascii_letters,8)),random.randint(1,99999))
         
-        LOG.info("build ccu3 modul, version %s"%(__version__))  
+        """
+        rpcPort
+        """
+        self.__rpcPort=False
+        
+        """
+        ccu3Commands for initStart & initStop
+        """
+        self.__ccu3Commands=ccu3Commands(self.config["objectID"],self.config["ccuIP"])
+                
+        LOG.info("build ccu3 modul with Interface ID %s, version %s"%(self.__interfaceID,__version__))  
         
     def run(self):
         try:
             LOG.debug("ccu3 modul up")
             while self.ifShutdown:
-                # load config from self.config
-                rpcIP=self.core.getLocalIP()
-                rpcPort=self.config["server"]["rpcPort"]
-                interfaceID="test_%s"%(randint(1,99999))
-                update=False
                 while self.running:
                     #####
                     try:
-                        
                         LOG.debug("ccu3 modul is running")
                         sleepTimer=self.__blockTime-int(time())
+                        rpcIP=self.core.getLocalIP()
+                        rpcPort=self.__getFreeRPCPort()
+                        
                         if sleepTimer<=0:
                             sleepTimer=LOOP_SLEEP
+                            """ server is not build """
                             if self.__rpcServer==False:
-                                self.__startRPCServer(rpcIP,
-                                                      rpcPort
-                                                      )
-                                self.__sendStartRPCrequest(rpcIP,
-                                                           rpcPort,
-                                                           interfaceID
-                                                           )
+                                self.__startRPCServer()
+                                self.__ccu3Commands.initStart(rpcIP,
+                                                              rpcPort,
+                                                              self.__interfaceID
+                                                              )
+                            
+                            """ server is build but not running """
                             if not(self.__rpcServer.isAlive()):
-                                self.__sendStopRPCrequest(rpcIP,
-                                                          rpcPort
-                                                          ) 
+                                self.__ccu3Commands.initStop(rpcIP,
+                                                             rpcPort
+                                                             )
                                 self.__stopRPCServer()
-                                self.__startRPCServer(rpcIP,
-                                                      rpcPort
-                                                      ) 
-                                self.__sendStartRPCrequest(rpcIP,
-                                                           rpcPort,
-                                                           interfaceID
-                                                           )
+                                self.__startRPCServer() 
+                                self.__ccu3Commands.initStart(rpcIP,
+                                                              rpcPort,
+                                                              self.__interfaceID
+                                                              )
+                            
+                            """ restart all, no events detect """
                             if self.__timerRestartRPC<int(time()):
-                                self.__sendStopRPCrequest(rpcIP,
-                                                          rpcPort
-                                                          )
+                                self.__ccu3Commands.initStop(rpcIP,
+                                                             rpcPort
+                                                             )
                                 self.__stopRPCServer()
-                                self.__startRPCServer(rpcIP,
-                                                      rpcPort
-                                                      ) 
-                                self.__sendStartRPCrequest(rpcIP,
-                                                           rpcPort,
-                                                           interfaceID
-                                                           )
+                                self.__startRPCServer() 
+                                self.__ccu3Commands.initStart(rpcIP,
+                                                              rpcPort,
+                                                              self.__interfaceID
+                                                              )
+                            """ no events detect send a dummy change """    
                             if self.__timerHmWakeUP<int(time()):
                                 LOG.warning("message timeout, detected. no message since %s sec"%(self.config['MSGtimeout']))
-                                self.__ccu3XMLWakeup(self.config)  
-                            if not(update):
-                                update=True
-                                self.__CCUlistDevices()
+                                self.__ccu3XMLWakeup(self.config)
                         sleep(sleepTimer)
                     except (defaultEXC) as e:
                         LOG.critical("error in rpc server  %s msg: %s"%(self.config['objectID'],e))
@@ -230,7 +222,10 @@ class ccu3Events(defaultModul):
         exceptione: defaultEXC
         """
         try:
-            self.__sendStopRPCrequest(self.core.getLocalIP(),self.config['server']['rpcPort'])
+            rpcIP=self.core.getLocalIP()
+            rpcPort=self.__getFreeRPCPort()
+            self.__ccu3Commands.initStop(rpcIP,
+                                         rpcPort)
             self.__stopRPCServer()
             defaultModul.stopModul(self)
         except:
@@ -264,7 +259,7 @@ class ccu3Events(defaultModul):
         """
         try:
             objectID="ccu3_%s"%(self.config["objectID"])
-            xmlClient=xml_api(objectID,cfg["ccu3XML"])
+            xmlClient=ccu3XML(objectID,cfg["ccu3XML"])
             xmlClient.updateHMDevice(cfg["ise_ID"],cfg["value"])
             self.__resetHmMessagesTimer()
         except (defaultEXC) as e:
@@ -273,10 +268,7 @@ class ccu3Events(defaultModul):
         except:
             raise defaultEXC("unkown error in ccu3XMLWakeup %s"%(self.config["objectID"]),True)
             
-    def __startRPCServer(self,
-                         rpcIP,
-                         rpcPort
-                         ):
+    def __startRPCServer(self):
         '''
         build a RPC Server
         
@@ -288,13 +280,14 @@ class ccu3Events(defaultModul):
         rxception: defaultEXC
         '''
         try:
-           
+            rpcIP=self.core.getLocalIP()
+            rpcPort=self.__getFreeRPCPort()
             LOG.info("RPC Server %s:%s start"%(rpcIP,rpcPort))
             self.rpcServerINST = SimpleXMLRPCServer((rpcIP,int(rpcPort)))
             self.rpcServerINST.logRequests=False
             self.rpcServerINST.register_introspection_functions() 
             self.rpcServerINST.register_multicall_functions() 
-            self.rpcServerINST.register_instance(ccu3RPCrequest(self.config,self))
+            self.rpcServerINST.register_instance(ccu3RPCServer(self.config,self))
             self.__rpcServer = threading.Thread(target=self.rpcServerINST.serve_forever)
             self.__rpcServer.start()
             self.resetAllTimer()
@@ -309,12 +302,11 @@ class ccu3Events(defaultModul):
             if self.__rpcServer:
                 self.rpcServerINST.shutdown()
                 self.rpcServerINST.server_close()
-            self.rpcServerINST=False
-            self.__rpcServer=False
         except:
-            self.rpcServerINST=False
-            self.__rpcServer=False
             LOG.critical("unkown error in stopRPCServer %s"%(self.config['objectID']),True)
+        self.rpcServerINST=False
+        self.__rpcServer=False
+        self.__rpcPort=False
     
     def resetAllTimer(self):
         """
@@ -340,5 +332,26 @@ class ccu3Events(defaultModul):
     
     def __resetRestartRPCTimer(self):
         self.__timerRestartRPC=self.config['MSGtimeout']+int(time())+5
+        
+    def __getFreeRPCPort(self):
+        """
+        
+        when self_rpcPort is fals, find a new free TCP Port and
+        store it to self.__rpcPort
+        
+        return int : free TCP port
+        
+        exception:defaultEXC
+        """
+        try:
+            if not(self.__rpcPort):
+                port=RPC_PORT_START
+                while (not(self.core.ifPortFree(port))):
+                    port=port+1
+                self.__rpcPort=port
+                LOG.info("finde free network port %s"%(port))
+            return self.__rpcPort
+        except:
+            raise defaultEXC("unkown error in getFreePort",True)
         
     
