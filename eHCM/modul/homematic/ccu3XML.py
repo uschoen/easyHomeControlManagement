@@ -35,7 +35,7 @@ exception: all errors defaultEXC
 
 '''
 
-__version__='0.9'
+__version__='0.91'
 __author__ = 'ullrich schoen'
 
 # Standard library imports
@@ -64,7 +64,10 @@ class ccu3XML(defaultModul):
         defaultCFG={
                 "hmHost":"http://127.0.0.1",
                 "https":False,
-                "url":"/config/xmlapi/statechange.cgi", 
+                "path":{
+                    "statechange":"/addons/xmlapi/statechange.cgi",
+                    "devicelist":"/addons/xmlapi/devicelist.cgi"
+                }, 
                 "blockConnector":30,
             }
 
@@ -74,38 +77,84 @@ class ccu3XML(defaultModul):
         defaultModul.__init__(self,objectID,defaultCFG)
         
         LOG.info("build xml.API modul, %s instance"%(__name__))               
-        
-    def updateHMDevice(self,iseID,value):
+    
+    def XMLdevicelist(self):
         '''
-        
+            list the HM devices with the data from the XML API
+            
+            return: dict
+            
+            exception: defaultEXC
         '''
         try:
-            LOG.debug("update iseID %s with value %s"%(iseID,value)) 
-                     
+            LOG.debug("get all device from HM %s"%(self.config['hmHost']))
+            url=("%s%s?"%(self.config['hmHost'],self.config['path']['devicelist']))
             response=False
             if self.config['https']:
-                url=("%s%s?ise_id=%s&new_value=%s"%(self.config['hmHost'],self.config['url'],iseID,value))
                 response=self.__sendHttps(url)
             else:
-                url=("%s%s?ise_id=%s&new_value=%s"%(self.config['hmHost'],self.config['url'],iseID,value))
                 response=self.__sendHttp(url)
+            HMresponse=xmltodict.parse(response.data)
+            return HMresponse
+        except:
+            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
+        
+    def XMLstatechange(self,iseID,value):
+        '''
+            update a hm device via xml APL
+            
+            iseID: the iseID from the Device channel
+            value: the vlaue from the channel
+            
+            exception: defaultEXC
+        '''
+        try:
+            LOG.info("update iseID %s with value %s"%(iseID,value)) 
+                     
+            response=False
+            url=("%s%s?ise_id=%s&new_value=%s"%(self.config['hmHost'],self.config['path']['statechange'],iseID,value))
                 
+            if self.config['https']:
+                response=self.__sendHttps(url)
+            else:
+                response=self.__sendHttp(url)
+            if self.__checkresponse(response):
+                return
+            else:
+                LOG.error("update iseID %s with value %s not succesful"%(iseID,value))      
+        except (defaultEXC) as e:
+            raise e            
+        except:
+            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
+        
+    def __checkresponse(self,response):
+        '''
+            check the respone from the homematic
+            
+            response: urllib3 object
+            
+            return: true/false
+            
+            exception: defaultEXC
+        '''
+        try:
             HMresponse=xmltodict.parse(response.data)
             if "result" in HMresponse:
                 if "changed" in HMresponse['result']: 
                     LOG.debug("value successful change")
+                    return True
                 elif "not_found" in HMresponse['result']: 
-                    raise defaultEXC("can not found iseID %s"%(iseID))
+                    LOG.error("can not found iseID ")
+                    return False
                 else:
-                    raise defaultEXC("get some unkown answer %s"%(response.data))
+                    LOG.error("get some unkown answer %s"%(response.data))
+                    return False
             else:
-                raise defaultEXC("get some unkown answer %s"%(response.data)) 
-        
-            
+                LOG.error("no result in data %s"%(response.data))
+                return False
         except:
-            LOG.critical("some error in xml_api")
-            raise defaultEXC("can't update homematic, some error")
-    
+            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
+        
     def __sendHttps(self,url):
         '''
         ' @todo: write HTTPS
