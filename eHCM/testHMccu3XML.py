@@ -58,7 +58,7 @@ try:
     objectID="test@test"
     LOG.debug("obj %s cfg %s"%(objectID,eventCFG))
     modul=testModul(objectID,eventCFG)
-    data=modul.XMLdevicelist()
+    data=modul.XMLdeviceList()
     '''
     run  a modul
     '''

@@ -20,10 +20,10 @@ xml_api(objectID,modulCFG)
 
 objectID="name"
 modulCFG:{
-            "hmHost":"http://127.0.0.1",            #url CCU3
-            "https":False,                          #use https ?
-            "url":"/config/xmlapi/statechange.cgi", #url path
-            "blockConnector":30                     #block time if error
+            "ccu3IP":"127.0.0.1",                #ccu3 ip
+            "https":False,                       # use https
+            "urlPath":"/addons/xmlapi/",         #urlPath
+            "blockConnector":30                  #block time if error
          }
 xml_api.updateHMDevice(iseID,value)
 
@@ -62,111 +62,110 @@ class ccu3XML(defaultModul):
     def __init__(self,objectID,modulCFG={}):
         # confiuration 
         defaultCFG={
-                "hmHost":"http://127.0.0.1",
+                "ccu3IP":"127.0.0.1",
                 "https":False,
-                "path":{
-                    "statechange":"/addons/xmlapi/statechange.cgi",
-                    "devicelist":"/addons/xmlapi/devicelist.cgi"
-                }, 
-                "blockConnector":30,
+                "urlPath":"/addons/xmlapi/",
+                "blockConnector":30
             }
-
-        self.__default_arg=["iseID","value"]                
-        defaultCFG.update(modulCFG)
-        
-        defaultModul.__init__(self,objectID,defaultCFG)
-        
-        LOG.info("build xml.API modul, %s instance"%(__name__))               
-    
-    def XMLdevicelist(self):
-        '''
-            list the HM devices with the data from the XML API
             
-            return: dict
+        defaultCFG.update(modulCFG)
+        defaultModul.__init__(self,objectID,defaultCFG)
+        LOG.info("build xml.API modul, %s instance verion:%s"%(__name__,__version__))               
+     
+    def XMLstateChange(self,iseID,value): 
+        '''
+            change a value in the ccu3 via xmlAPI
+            
+            iseID: iseID numer from the chanel in ccu3
+            value: value to set in the ccu3
+            
+            exception: default exception
+        
+        '''
+        try:
+            LOG.debug("update iseID %s with value %s"%(iseID,value)) 
+            url=("%s%s?ise_id=%s&new_value=%s"%(self.config['ccu3IP'],self.config['urlPath'],iseID,value))
+            urlib3OBJ=self.__sendUrl(url)
+            HMresponse=self.__converturlib3(urlib3OBJ)
+            if not self.__checkResult(HMresponse):
+                raise defaultEXC("some error in ccu3 response")
+        except (defaultEXC) as e:
+            raise e
+        except:
+            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
+            
+    
+    def XMLdeviceList(self):
+        '''
+            list all devices in the ccu3 via xmlAPI
+            
+            return: dict with devices
             
             exception: defaultEXC
         '''
         try:
-            LOG.debug("get all device from HM %s"%(self.config['hmHost']))
-            url=("%s%s?"%(self.config['hmHost'],self.config['path']['devicelist']))
-            response=False
-            if self.config['https']:
-                response=self.__sendHttps(url)
-            else:
-                response=self.__sendHttp(url)
-            HMresponse=xmltodict.parse(response.data)
+            url=("%s%sdevicelist.cgi"%(self.config['ccu3IP'],self.config['urlPath']))
+            urlib3OBJ=self.__sendUrl(url)
+            HMresponse=self.__converturlib3(urlib3OBJ)
+            return HMresponse
+        except (defaultEXC) as e:
+            raise e
+        except:
+            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
+            
+    def __converturlib3(self,urlib3OBJ):
+        '''
+            convert a urlib3 object in a dict
+            
+            urlib3OBJ: urlib3 object
+            
+            return: dict
+            
+            exception defaultEXC
+        '''
+        try:
+            HMresponse=xmltodict.parse(urlib3OBJ.data)
             return HMresponse
         except:
             raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
         
-    def XMLstatechange(self,iseID,value):
+    def __checkResult(self,HMresponse):
         '''
-            update a hm device via xml APL
-            
-            iseID: the iseID from the Device channel
-            value: the vlaue from the channel
-            
-            exception: defaultEXC
+            check the 
         '''
         try:
-            LOG.info("update iseID %s with value %s"%(iseID,value)) 
-                     
-            response=False
-            url=("%s%s?ise_id=%s&new_value=%s"%(self.config['hmHost'],self.config['path']['statechange'],iseID,value))
-                
-            if self.config['https']:
-                response=self.__sendHttps(url)
-            else:
-                response=self.__sendHttp(url)
-            if self.__checkresponse(response):
-                return
-            else:
-                LOG.error("update iseID %s with value %s not succesful"%(iseID,value))      
-        except (defaultEXC) as e:
-            raise e            
-        except:
-            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
-        
-    def __checkresponse(self,response):
-        '''
-            check the respone from the homematic
-            
-            response: urllib3 object
-            
-            return: true/false
-            
-            exception: defaultEXC
-        '''
-        try:
-            HMresponse=xmltodict.parse(response.data)
             if "result" in HMresponse:
                 if "changed" in HMresponse['result']: 
                     LOG.debug("value successful change")
                     return True
                 elif "not_found" in HMresponse['result']: 
-                    LOG.error("can not found iseID ")
+                    LOG.error("can not found iseID")
                     return False
                 else:
-                    LOG.error("get some unkown answer %s"%(response.data))
+                    LOG.error("get some unkown answer %s"%(HMresponse))
                     return False
             else:
-                LOG.error("no result in data %s"%(response.data))
-                return False
+                LOG.error("get some unkown answer %s"%(HMresponse)) 
+                return False        
         except:
             raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
-        
-    def __sendHttps(self,url):
-        '''
-        ' @todo: write HTTPS
-        '''
-        try:
-            LOG.warning("__sendHttps not implemnt")
-        except:
-            raise defaultEXC("can't not check connectedt senors")     
     
-    def __sendHttp(self,url):
+    def __sendUrl(self,url):
+        '''
+            send the http/s request to the ccu3
+            
+            url: url without https://
+            
+            return: urlib3 object
+            
+            exception: defaultExc
+        '''
         try:
-            LOG.debug("url is %s "%(url))
+            if self.config['https']:
+                url="https://%s"%(url)
+            else:
+                url="http://%s"%(url)
+            LOG.info("send url:%s"%(url))
             http = urllib3.PoolManager()
             response = http.request('GET', url)
             if  response.status != 200:
@@ -175,6 +174,6 @@ class ccu3XML(defaultModul):
         except (defaultEXC) as e:
             raise e
         except (Exception) as e:
-            raise defaultEXC("get error from  url %s"%(e)) 
+            raise e 
         except:
-            raise defaultEXC("some error in __SendHTTP",True)                   
+            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)                 

@@ -35,7 +35,7 @@ exception: all errors defaultEXC
 
 '''
 
-__version__='0.9'
+__version__='0.91'
 __author__ = 'ullrich schoen'
 
 # Standard library imports
@@ -61,6 +61,7 @@ class ccu3XML(defaultModul):
     '''
     def __init__(self,objectID,modulCFG={}):
         # confiuration 
+        print (modulCFG)
         defaultCFG={
                 "ccu3IP":"127.0.0.1",
                 "https":False,
@@ -72,7 +73,7 @@ class ccu3XML(defaultModul):
         print (modulCFG)
         defaultModul.__init__(self,objectID,defaultCFG)
         print (self.config)
-        LOG.info("build xml.API modul, %s instance"%(__name__))               
+        LOG.info("build xml.API modul, %s instance verion:%s"%(__name__,__version__))               
      
     def XMLstateChange(self,iseID,value): 
         '''
