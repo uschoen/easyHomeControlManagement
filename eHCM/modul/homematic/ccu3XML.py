@@ -48,7 +48,8 @@ from core.exception import defaultEXC
 
 
 LOG=logging.getLogger(__name__)
-
+__DEVICEPACKAGE__="homematic"
+__CHANNELPACKAGE__="homematic"
 try:
     import xmltodict                                     #@UnresolvedImport,@UnusedImport
 except:
@@ -107,11 +108,50 @@ class ccu3XML(defaultModul):
             url=("%s%sdevicelist.cgi"%(self.config['ccu3IP'],self.config['urlPath']))
             urlib3OBJ=self.__sendUrl(url)
             HMresponse=self.__converturlib3(urlib3OBJ)
-            return HMresponse
+            eHMCDeviceList=self.__convertDeviceList(HMresponse['deviceList']['device'])
+            return eHMCDeviceList
         except (defaultEXC) as e:
             raise e
         except:
             raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
+        
+    def __convertDeviceList(self,deviceList={}):
+        '''
+        
+        '''
+        try:
+            eHMCDeviceList={}
+            for device in deviceList:
+                deviceID=device['@address']
+                deviceTyp=device['@device_type'].replace("-","_")
+                eHMCDeviceList[deviceID]={'parameter':{
+                                                        "devicePackage": __DEVICEPACKAGE__,
+                                                        "deviceType": deviceTyp},
+                                          'channels':{}
+                                          }
+                for deviceKey, keyValue in device.items():
+                    deviceKey=deviceKey.replace("@", "")
+                    if deviceKey=="channel":
+                        ''' add channel to device '''
+                        if isinstance(keyValue, dict):
+                            ''' only on channel '''
+                            keyValue=[keyValue,]
+                        for deviceChannel in keyValue:
+                            channelName="%s:%s"%(deviceTyp,deviceChannel['@index'])
+                            eHMCDeviceList[deviceID]['channels'][channelName]={'parameter':{
+                                                                                    "channelPackage": __CHANNELPACKAGE__,
+                                                                                    "channelType": "%s_%s"%(deviceTyp,deviceChannel['@index'])}
+                                                                                    }
+                            for channelKey, channelValue in deviceChannel.items():
+                                channelKey=channelKey.replace("@","")
+                                eHMCDeviceList[deviceID]['channels'][channelName]['parameter'][channelKey]=channelValue
+                    else:
+                        ''' add paramter to device    '''
+                        eHMCDeviceList[deviceID]['parameter'][deviceKey]=keyValue
+            return eHMCDeviceList
+        except:
+            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
+        
             
     def __converturlib3(self,urlib3OBJ):
         '''
