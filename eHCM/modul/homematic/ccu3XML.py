@@ -73,6 +73,14 @@ class ccu3XML(defaultModul):
         defaultModul.__init__(self,objectID,defaultCFG)
         LOG.info("build xml.API modul, %s instance verion:%s"%(__name__,__version__))               
      
+    def newDevice(self):
+        devices=self.XMLdeviceList()
+        for deviceID in devices:
+            objectID="%s@test.test"%(deviceID)
+            devicePackage=devices[deviceID]['parameter']['devicePackage']
+            deviceType=devices[deviceID]['parameter']['deviceType']
+            self.core.addDevice(objectID, devicePackage, deviceType, devices[deviceID])
+    
     def XMLstateChange(self,iseID,value): 
         '''
             change a value in the ccu3 via xmlAPI
@@ -105,7 +113,7 @@ class ccu3XML(defaultModul):
             exception: defaultEXC
         '''
         try:
-            url=("%s%sdevicelist.cgi"%(self.config['ccu3IP'],self.config['urlPath']))
+            url=("%s%sdevicelist.cgi?show_internal=1"%(self.config['ccu3IP'],self.config['urlPath']))
             urlib3OBJ=self.__sendUrl(url)
             HMresponse=self.__converturlib3(urlib3OBJ)
             eHMCDeviceList=self.__convertDeviceList(HMresponse['deviceList']['device'])
@@ -124,11 +132,19 @@ class ccu3XML(defaultModul):
             for device in deviceList:
                 deviceID=device['@address']
                 deviceTyp=device['@device_type'].replace("-","_")
+                
+                '''
+                    device container
+                '''
                 eHMCDeviceList[deviceID]={'parameter':{
                                                         "devicePackage": __DEVICEPACKAGE__,
                                                         "deviceType": deviceTyp},
-                                          'channels':{}
+                                          'channels':{},
+                                          "devicePackage": __DEVICEPACKAGE__,
+                                          "deviceType": deviceTyp,
+                                          "events":{}
                                           }
+                
                 for deviceKey, keyValue in device.items():
                     deviceKey=deviceKey.replace("@", "")
                     if deviceKey=="channel":
@@ -138,10 +154,17 @@ class ccu3XML(defaultModul):
                             keyValue=[keyValue,]
                         for deviceChannel in keyValue:
                             channelName="%s:%s"%(deviceTyp,deviceChannel['@index'])
+                            '''
+                                channel Container
+                            '''
                             eHMCDeviceList[deviceID]['channels'][channelName]={'parameter':{
                                                                                     "channelPackage": __CHANNELPACKAGE__,
-                                                                                    "channelType": "%s_%s"%(deviceTyp,deviceChannel['@index'])}
-                                                                                    }
+                                                                                    "channelType": "%s_%s"%(deviceTyp,deviceChannel['@index'])},
+                                                                                "channelPackage": __CHANNELPACKAGE__,
+                                                                                "channelType": "%s_%s"%(deviceTyp,deviceChannel['@index']),
+                                                                                "events":{}  
+                                                                                }
+                            
                             for channelKey, channelValue in deviceChannel.items():
                                 channelKey=channelKey.replace("@","")
                                 eHMCDeviceList[deviceID]['channels'][channelName]['parameter'][channelKey]=channelValue
