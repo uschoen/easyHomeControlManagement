@@ -15,6 +15,7 @@ from modul.homematic.ccu3XML import ccu3XML as testModul
 import logging
 import logging.config
 import pprint
+import json,os
 
 from time import sleep
 
@@ -58,7 +59,10 @@ try:
     objectID="test@test"
     LOG.debug("obj %s cfg %s"%(objectID,eventCFG))
     modul=testModul(objectID,eventCFG)
-    data=modul.XMLdeviceList()
+    
+    #data=modul.XMLdeviceList()
+    
+    modul.newDevice()
     '''
     run  a modul
     '''
@@ -67,12 +71,18 @@ try:
     #modul.updateDevices()
     #sleep(180)
     #modul.shutDownModul()
+    '''
+    write data
+    '''
+    #with open(os.path.normpath("/mnt/nas01/git/githubClone/easyHomeControlManagement/eHCM/log/device.json"),'w') as outfile:
+    #    json.dump(data, outfile,sort_keys=True, indent=4)
+    #outfile.close()
     
     '''
     print data
     '''
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(data)
+    #pp = pprint.PrettyPrinter(indent=4)
+    #pp.pprint(data)
 except:
     modul.stopModul()
     modul.shutDownModul()
