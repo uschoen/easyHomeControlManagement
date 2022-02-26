@@ -103,7 +103,22 @@ class ccu3XML(defaultModul):
         except:
             raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
             
-    
+    def XMLstateList(self):
+        '''
+            list alle states in the ccu3 via XML
+            
+            return: dict with States of alle devices and channels
+            
+            exceptions: defaultEXC
+        '''
+        try:
+            url=("%s%sstateList.cgi"%(self.config['ccu3IP'],self.config['urlPath'])) 
+            urlib3OBJ=self.__sendUrl(url)
+            HMresponse=self.__converturlib3(urlib3OBJ)
+            return HMresponse
+        except:
+            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
+        
     def XMLdeviceList(self):
         '''
             list all devices in the ccu3 via xmlAPI
