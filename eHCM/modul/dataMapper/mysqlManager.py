@@ -11,6 +11,7 @@ sudo pip3 install mysql-connector-python
 '''
 
 
+
 __version__='0.91'
 __author__ = 'ullrich schoen'
 
@@ -19,14 +20,18 @@ from core.exception import defaultEXC
 from modul.defaultModul import defaultModul
 # Standard library imports
 import logging
-import time
-try:
-    import mysql.connector                                                         #@UnresolvedImport
-    from mysql.connector import Error                                              #@UnresolvedImport,@UnusedImport
-    from mysql.connector import errorcode                                          #@UnresolvedImport,@UnusedImport
-except:
-    raise defaultEXC("no mysql.connector module installed")
 
+#try:
+#    import mysql.connector                                                         #@UnresolvedImport
+#    from mysql.connector import Error                                              #@UnresolvedImport,@UnusedImport
+#    from mysql.connector import errorcode                                          #@UnresolvedImport,@UnusedImport
+#except:
+#    raise defaultEXC("no mysql.connector module installed")
+try:
+    import MySQLdb                                                     #@UnresolvedImport
+except:
+    raise defaultEXC("no mysqlclient module installed, use sudo pip3 install mysqlclient")
+    
 # Local apllication constant
 LOG=logging.getLogger(__name__)
 
@@ -84,6 +89,8 @@ class mysqlManager(defaultModul,object):
                "callerValues":self.__callerValues
             }
             
+            self.__dbConnection=False
+            self.__cursor=False
             
             LOG.info("build mysqlMapper , version:%s"%(__version__))
         except:
@@ -103,20 +110,22 @@ class mysqlManager(defaultModul,object):
             LOG.info("call update from MysqlMapper with args %s"%(values))
             self.__callerARGS.update(values)
             
-                
-            sql=""
-               
-            dbConnection=self.__dbConnect(self.config['database'])
-            sql=self.__buildSQL(self.config["mapping"])
-            self.__sqlExecute(dbConnection,sql)
-            self.__dbClose(dbConnection)
+            if not  self.__dbConnection:  
+                self.__dbConnect(self.config['database'])
+            if not self.__cursor:
+                self.__cursor=self.__dbConnection.cursor()
+            self.__sqlExecute(self.__buildSQL(self.config["mapping"]))
             LOG.debug("call update from MysqlMapper finish")
         except defaultEXC as e:
-            self.__dbClose(dbConnection)
+            self.__dbConnection.rollback()
+            self.__dbClose()
             LOG.critical("error in mysqlMapper: %s with error:%s"%(self.config['name'],e))   
+        
         except:
-            self.__dbClose(dbConnection)
+            self.__dbConnection.rollback()
+            self.__dbClose()
             LOG.critical("unkown error in modul %s"%(self.config['name']),True)
+            
     
     def stop(self):
         LOG.error("modul %s is stop"%(self.config['name'])) 
@@ -129,7 +138,7 @@ class mysqlManager(defaultModul,object):
             pass
         LOG.error("modul %s is shutdown"%(self.config['name']))       
                   
-    def __sqlExecute(self,dbConnection,sql):
+    def __sqlExecute(self,sql):
         """
         excecute a sql statment
          
@@ -140,16 +149,24 @@ class mysqlManager(defaultModul,object):
         """
         try:
             LOG.debug("sqlExecute: %s"%(sql))
-            cursor  = dbConnection.cursor()
-            cursor.execute(sql)
-            dbConnection.commit()  
-            cursor.close()
-        except (mysql.connector.Error) as e:
-            raise defaultEXC("mysql error %s"%(e))
+            self.__cursor.execute(sql)
+            self.__dbConnection.commit()
         except :
             raise defaultEXC("unkown error sql:%s"%(sql),True)    
     
-    def __dbClose(self,dbConnection):
+    def __cursorClose(self):
+        '''
+            close the db cursor object
+            
+            exception: none
+        '''
+        try:
+            self.__cursor.close()
+            self.__cursor=False
+        except:
+            self.__cursor=False
+        
+    def __dbClose(self):
         '''
         
         close the database connection
@@ -161,14 +178,16 @@ class mysqlManager(defaultModul,object):
         exception: none
         '''
         try:
-            if dbConnection:
+            if self.__dbConnection:
                 LOG.info("close database")
-                dbConnection=False
-                dbConnection.close()
-               
+                self.__cursorClose()
+                self.__dbConnection.close()
+                self.__dbConnection=False
+                
         except:
-            pass
-        
+            self.__dbConnection=False
+            
+            
             
     def __dbConnect(self,cfg={}):
         '''
@@ -186,19 +205,20 @@ class mysqlManager(defaultModul,object):
         '''
         LOG.info("try connect to host:%s:%s with user:%s table:%s"%(cfg['host'],cfg['port'],cfg['user'],cfg['database']))
         try:
-            dbConnection = mysql.connector.connect(**cfg)
-                                                
-            #dbConnection.apilevel = "2.0"
-            dbConnection.threadsafety = 2
-            #dbConnection.paramstyle = "format" 
-            #dbConnection.autocommit=True
+            #self.__dbConnection = mysql.connector.connect(**cfg)
+            self.__dbConnection = MySQLdb.connect(**cfg)                                     
+            #self.__dbConnection.apilevel = "2.0"
+            #self.__dbConnection.threadsafety = 1
+            #self.__dbConnection.paramstyle = "format" 
+            #self.__dbConnection.autocommit=True
             LOG.info("mysql connect succecfull")
-            return dbConnection
-        except (mysql.connector.Error) as e:
-            self.__dbClose(dbConnection)  
-            dbConnection=False
-            raise defaultEXC("can't not connect to database: %s"%(e))
+            
+        #except (mysql.connector.Error) as e:
+        #    self.__dbClose()  
+        #    self.__dbConnection=False
+        #    raise defaultEXC("can't not connect to database: %s"%(e))
         except:
+            self.__dbConnection=False
             raise defaultEXC("unkown error in modul %s"%(self.config['name']),True)
         
     def __buildSQL(self,mapping):
