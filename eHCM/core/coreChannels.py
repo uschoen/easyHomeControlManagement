@@ -11,7 +11,7 @@ __author__ = 'ullrich schoen'
 
 # Standard library imports
 import logging
-
+import threading
 # Local application imports
 from .exception import defaultEXC
 
@@ -103,7 +103,8 @@ class coreChannels():
         if not self.ifDeviceIDExists(objectID):
             raise defaultEXC("deviceID %s is not exist"%(objectID),False)
         try: 
-            self.devices[objectID].setChannelValue(channelName,value)
+            threading.Thread(target=self.devices[objectID].setChannelValue,args = (channelName,value)).start()
+            #self.devices[objectID].setChannelValue(channelName,value)
             '''
                 update remote core
             '''
