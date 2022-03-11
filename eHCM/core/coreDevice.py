@@ -16,7 +16,7 @@ import time
 from datetime import datetime
 
 # Local application imports
-from .exception import defaultEXC
+from .exception import defaultEXC,coreDeviceEXC
 
 DEVICE_BASE_PATH="modul"      #device base path
 DEFAULT_DEVICE_PACKGAE="hmc"             #default device packgae
@@ -52,6 +52,27 @@ class coreDevices():
         except:
             raise defaultEXC("can't restore deviceID %s with package %s and type: %s"%(objectID))
             
+    
+    def updateDevice(self,objectID,deviceCFG={},forceUpdate=False):
+        '''
+            update a Core connector
+            
+            objectID:      core objectID
+            deviceCFG:    dict with device configuraition
+            forceUpdate:    true/false(default) force update remote core
+            
+            return: nothing
+            
+            exception: coreDeviceEXC
+        '''
+        if objectID not in self.devices:
+            raise coreDeviceEXC("device %s not exists"%(objectID))
+        try:
+            self.devices[objectID].updateDevice
+            self.updateRemoteCore(forceUpdate,objectID,self.thisMethode(),objectID,deviceCFG)
+        except:
+            raise coreDeviceEXC("unkown error in %s"%(self.thisMethode()),True)
+        
             
         
     def __deleteDevice(self,objectID):
