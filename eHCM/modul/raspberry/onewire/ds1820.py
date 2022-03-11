@@ -210,7 +210,7 @@ class ds1820(defaultModul):
                 if m:
                     value =str(float(m.group(2)) / 1000.0)
                     f.close()
-                    value=round(float(value),2)
+                    value=round(float(value),1)
                     return value
                 else:
                     raise defaultEXC("value error at sensor path"%(path),False)    
