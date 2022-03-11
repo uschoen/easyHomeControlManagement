@@ -119,7 +119,7 @@ class remoteCore(threading.Thread):
                                 self.__syncRemoteCore()
                             if not self.__coreQueue.empty():
                                 self.__workingQueue(self.__networkSocket,self.__coreQueue) 
-                        time.sleep(1)   
+                        time.sleep(0.1)   
                     except (defaultEXC,protocolException,cryptException):
                         self.__blockServer()
                         self.__remoteCoreProtocol=False   
