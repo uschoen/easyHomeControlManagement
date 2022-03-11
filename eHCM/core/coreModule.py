@@ -195,7 +195,11 @@ class coreModule():
                  "modulClass":self.module[objectID].get('modulClass',False),
             }
             if self.ifonThisHost(objectID):
-                cfg['config']=self.module[objectID]['instance'].getConfiguration()
+                if self.module[objectID]['instance']:
+                    cfg['config']=self.module[objectID]['instance'].getConfiguration()
+                else:
+                    LOG.warning("modul %s have some error, use core configuration"%(objectID))
+                    cfg['config']=self.module[objectID]['config']
             else:
                 cfg['config']=self.module[objectID]['config']
             return cfg
