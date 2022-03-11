@@ -60,9 +60,9 @@ try:
     LOG.debug("obj %s cfg %s"%(objectID,eventCFG))
     modul=testModul(objectID,eventCFG)
     
-    #data=modul.XMLdeviceList()
+    data=modul.XMLDeviceList()
     
-    modul.newDevice()
+    #modul.newDevice()
     '''
     run  a modul
     '''
@@ -74,9 +74,9 @@ try:
     '''
     write data
     '''
-    #with open(os.path.normpath("/mnt/nas01/git/githubClone/easyHomeControlManagement/eHCM/log/device.json"),'w') as outfile:
-    #    json.dump(data, outfile,sort_keys=True, indent=4)
-    #outfile.close()
+    with open(os.path.normpath("/mnt/nas01/git/githubClone/easyHomeControlManagement/eHCM/log/deviceXML.json"),'w') as outfile:
+        json.dump(data, outfile,sort_keys=True, indent=4)
+    outfile.close()
     
     '''
     print data

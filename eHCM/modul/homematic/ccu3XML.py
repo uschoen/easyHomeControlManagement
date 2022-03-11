@@ -23,7 +23,6 @@ modulCFG:{
             "ccu3IP":"127.0.0.1",                #ccu3 ip
             "https":False,                       # use https
             "urlPath":"/addons/xmlapi/",         #urlPath
-            "blockConnector":30                  #block time if error
          }
 xml_api.updateHMDevice(iseID,value)
 
@@ -31,7 +30,7 @@ iseID="ise_id from the device"
 value="valu to set"
 
 return: nothing
-exception: all errors defaultEXC
+exception: all errors ccu3xmlEXC
 
 '''
 
@@ -44,7 +43,7 @@ import logging
 
 # Local application imports
 from modul.defaultModul import defaultModul
-from core.exception import defaultEXC
+from .ccu3EXC import ccu3xmlEXC
 
 
 LOG=logging.getLogger(__name__)
@@ -61,26 +60,21 @@ class ccu3XML(defaultModul):
     classdocs
     '''
     def __init__(self,objectID,modulCFG={}):
-        # confiuration 
+        ''' default confiuration '''
         defaultCFG={
                 "ccu3IP":"127.0.0.1",
+                "xml":{
                 "https":False,
-                "urlPath":"/addons/xmlapi/",
-                "blockConnector":30
-            }
+                "urlPath":"/addons/xmlapi/"
+                }
+             }
             
-        defaultCFG.update(modulCFG)
-        defaultModul.__init__(self,objectID,defaultCFG)
+        if not hasattr(self, "config"):
+            defaultCFG.update(modulCFG)
+            defaultModul.__init__(self,objectID,defaultCFG)
+        
         LOG.info("build xml.API modul, %s instance verion:%s"%(__name__,__version__))               
-     
-    def newDevice(self):
-        devices=self.XMLdeviceList()
-        for deviceID in devices:
-            objectID="%s@test.test"%(deviceID)
-            devicePackage=devices[deviceID]['parameter']['devicePackage']
-            deviceType=devices[deviceID]['parameter']['deviceType']
-            self.core.addDevice(objectID, devicePackage, deviceType, devices[deviceID])
-    
+        
     def XMLstateChange(self,iseID,value): 
         '''
             change a value in the ccu3 via xmlAPI
@@ -93,50 +87,50 @@ class ccu3XML(defaultModul):
         '''
         try:
             LOG.debug("update iseID %s with value %s"%(iseID,value)) 
-            url=("%s%s?ise_id=%s&new_value=%s"%(self.config['ccu3IP'],self.config['urlPath'],iseID,value))
+            url=("%s%s?ise_id=%s&new_value=%s"%(self.config['ccu3IP'],self.config['xml']['urlPath'],iseID,value))
             urlib3OBJ=self.__sendUrl(url)
             HMresponse=self.__converturlib3(urlib3OBJ)
             if not self.__checkResult(HMresponse):
-                raise defaultEXC("some error in ccu3 response")
-        except (defaultEXC) as e:
+                raise ccu3xmlEXC("some error in ccu3 response")
+        except (ccu3xmlEXC) as e:
             raise e
         except:
-            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
+            raise ccu3xmlEXC("unkown error in %s"%(self.core.thisMethode()),True)
             
-    def XMLstateList(self):
+    def XMLStateList(self):
         '''
             list alle states in the ccu3 via XML
             
             return: dict with States of alle devices and channels
             
-            exceptions: defaultEXC
+            exceptions: ccu3xmlEXC
         '''
         try:
-            url=("%s%sstateList.cgi"%(self.config['ccu3IP'],self.config['urlPath'])) 
+            url=("%s%sstatelist.cgi"%(self.config['ccu3IP'],self.config['xml']['urlPath'])) 
             urlib3OBJ=self.__sendUrl(url)
             HMresponse=self.__converturlib3(urlib3OBJ)
             return HMresponse
         except:
-            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
+            raise ccu3xmlEXC("unkown error in %s"%(self.core.thisMethode()),True)
         
-    def XMLdeviceList(self):
+    def XMLDeviceList(self,show_internal=1):
         '''
             list all devices in the ccu3 via xmlAPI
             
             return: dict with devices
             
-            exception: defaultEXC
+            exception: ccu3xmlEXC
         '''
         try:
-            url=("%s%sdevicelist.cgi?show_internal=1"%(self.config['ccu3IP'],self.config['urlPath']))
+            url=("%s%sdevicelist.cgi?show_internal=%s"%(self.config['ccu3IP'],self.config['xml']['urlPath'],show_internal))
             urlib3OBJ=self.__sendUrl(url)
             HMresponse=self.__converturlib3(urlib3OBJ)
             eHMCDeviceList=self.__convertDeviceList(HMresponse['deviceList']['device'])
             return eHMCDeviceList
-        except (defaultEXC) as e:
+        except (ccu3xmlEXC) as e:
             raise e
         except:
-            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
+            raise ccu3xmlEXC("unkown error in %s"%(self.core.thisMethode()),True)
         
     def __convertDeviceList(self,deviceList={}):
         '''
@@ -188,7 +182,7 @@ class ccu3XML(defaultModul):
                         eHMCDeviceList[deviceID]['parameter'][deviceKey]=keyValue
             return eHMCDeviceList
         except:
-            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
+            raise ccu3xmlEXC("unkown error in %s"%(self.core.thisMethode()),True)
         
             
     def __converturlib3(self,urlib3OBJ):
@@ -199,13 +193,13 @@ class ccu3XML(defaultModul):
             
             return: dict
             
-            exception defaultEXC
+            exception ccu3xmlEXC
         '''
         try:
             HMresponse=xmltodict.parse(urlib3OBJ.data)
             return HMresponse
         except:
-            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
+            raise ccu3xmlEXC("unkown error in %s"%(self.core.thisMethode()),True)
         
     def __checkResult(self,HMresponse):
         '''
@@ -226,7 +220,7 @@ class ccu3XML(defaultModul):
                 LOG.error("get some unkown answer %s"%(HMresponse)) 
                 return False        
         except:
-            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
+            raise ccu3xmlEXC("unkown error in %s"%(self.core.thisMethode()),True)
     
     def __sendUrl(self,url):
         '''
@@ -236,10 +230,10 @@ class ccu3XML(defaultModul):
             
             return: urlib3 object
             
-            exception: defaultExc
+            exception: ccu3xmlEXC
         '''
         try:
-            if self.config['https']:
+            if self.config['xml']['https']:
                 url="https://%s"%(url)
             else:
                 url="http://%s"%(url)
@@ -247,11 +241,9 @@ class ccu3XML(defaultModul):
             http = urllib3.PoolManager()
             response = http.request('GET', url)
             if  response.status != 200:
-                raise defaultEXC("gethttp error back:%s"%(response.status))
+                raise ccu3xmlEXC("gethttp error back:%s http"%(response.status))
             return response
-        except (defaultEXC) as e:
+        except (ccu3xmlEXC) as e:
             raise e
-        except (Exception) as e:
-            raise e 
         except:
-            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)                 
+            raise ccu3xmlEXC("unkown error in %s"%(self.core.thisMethode()),True)                 

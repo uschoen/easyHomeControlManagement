@@ -72,9 +72,7 @@ class coreDevices():
             self.updateRemoteCore(forceUpdate,objectID,self.thisMethode(),objectID,deviceCFG)
         except:
             raise coreDeviceEXC("unkown error in %s"%(self.thisMethode()),True)
-        
-            
-        
+         
     def __deleteDevice(self,objectID):
         '''
             delete a device from core

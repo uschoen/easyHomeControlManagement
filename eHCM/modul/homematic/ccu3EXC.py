@@ -14,11 +14,11 @@ import logging
 
 LOG=logging.getLogger(__name__)
 
-class ccu3XML(Exception):
+class ccu3xmlEXC(Exception):
     '''
     
     '''
     def __init__(self, msg="unkown error occured",tracback=False):
-        super(ccu3XML, self).__init__(msg)
+        super(ccu3xmlEXC, self).__init__(msg)
         self.msg = msg
         LOG.critical(msg,exc_info=tracback)
