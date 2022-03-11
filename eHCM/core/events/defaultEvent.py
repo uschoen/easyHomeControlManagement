@@ -14,6 +14,7 @@ __author__ = 'uschoen'
 # Standard library imports
 import logging
 import time
+import threading
 from copy import deepcopy
 
 # Local application imports
@@ -183,7 +184,9 @@ class defaultEvent(object):
                         continue
                     callerArgs=self.callers[caller]
                     LOG.debug("executeCaller %s with arg: %s"%(caller,callerArgs))
-                    self.executeCaller(callerArgs,callerObject)
+                    threading.Thread(target=self.executeCaller,args = (callerArgs,callerObject)).start()
+        
+                    #self.executeCaller(callerArgs,callerObject)
                 except (Exception) as e:
                     LOG.error("can't execute caller %s :%s"%(caller,e.msg))
         except:
@@ -212,6 +215,7 @@ class defaultEvent(object):
         arguments["callerObject"]=callerObject
         
         try:
+            
             methodToCall(**arguments)
             
         except (Exception) as e:
