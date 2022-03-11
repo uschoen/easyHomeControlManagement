@@ -22,3 +22,12 @@ class defaultEXC(Exception):
         super(defaultEXC, self).__init__(msg)
         self.msg = msg
         LOG.critical(msg,exc_info=tracback)
+    
+    
+
+class coreDeviceEXC(Exception):   
+    def __init__(self, msg="unkown error occured",tracback=False):
+        super(coreDeviceEXC, self).__init__(msg)
+        self.msg = msg
+        LOG.critical(msg,exc_info=tracback)
+        
