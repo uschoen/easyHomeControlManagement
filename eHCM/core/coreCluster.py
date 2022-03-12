@@ -242,7 +242,7 @@ class coreCluster():
             exception: defaultEXC
         '''
         if not self.coreCluster[objectID]['enable']:
-                LOG.error("can't start core connection %s, core connector is disable"%(objectID))
+                LOG.warning("can't start core connection %s, core connector is disable"%(objectID))
                 return
         try:
             LOG.info("start core connection %s"%(objectID))
@@ -250,7 +250,7 @@ class coreCluster():
             self.coreCluster[objectID]['running']=True
             self.coreCluster[objectID]['shutdown']=False
         except:
-            raise defaultEXC("can not start core connection %s"%(objectID))
+            raise defaultEXC("can't start core connection %s"%(objectID))
     
         
     def _loadClusterConfiguration(self,fileNameABS=None):
