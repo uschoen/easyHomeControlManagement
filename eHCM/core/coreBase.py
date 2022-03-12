@@ -56,7 +56,7 @@ class coreBase():
         except:
             LOG.error("some error in thisMethode")
     
-    def ifPortFree(self,port: int) -> bool:
+    def ifPortFree(self,port):
         '''
             check if the network port free on this host
             
@@ -67,8 +67,10 @@ class coreBase():
             exception: defaultEXC
         '''
         try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                return s.connect_ex(('localhost', port)) == 0 
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            res = sock.connect_ex(('localhost', port))
+            sock.close()
+            return res 
         except:
             raise defaultEXC("unkown error in %s"%(self.thisMethode()),True)
     
