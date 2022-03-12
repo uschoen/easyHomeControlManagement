@@ -118,8 +118,9 @@ class defaultChannel(eventManager,object):
             self.parameter['CFGVersion']=__version__
             self.parameter['channelPackage']=self.channel_package
             self.parameter['channelType']=self.channel_type
+            LOG.debug("update parameter for channel %s"%(self.channelName))
             ''' 
-            LOAD Events
+            update Events
             '''
             self.updateEvents(channelCFG.get('events',{}))    
         except (Exception) as e:

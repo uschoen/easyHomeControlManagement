@@ -168,14 +168,17 @@ class defaultDevice(deviceBase,channelManager,eventManager):
             '''
             self.parameter.update(deviceCFG.get('parameter',{}))
             self.parameter['CFGVersion']=__version__
+            LOG.info("update deviceID %s"%(self.deviceID))
             ''' 
                 device events  
             '''
             self.updateEvents(deviceCFG.get('events',{}))
+            LOG.debug("update events from deviceID %s"%(self.deviceID))
         
             '''
                 channels update
             '''
+            LOG.debug("update channels from deviceID %s"%(self.deviceID))
             self.updateChannels(deviceCFG.get('channels',{}))
         
         except (eventError) as e:
