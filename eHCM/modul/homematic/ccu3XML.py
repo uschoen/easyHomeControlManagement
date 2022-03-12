@@ -64,8 +64,8 @@ class ccu3XML(defaultModul):
         defaultCFG={
                 "ccu3IP":"127.0.0.1",
                 "xml":{
-                "https":False,
-                "urlPath":"/addons/xmlapi/"
+                    "https":False,
+                    "urlPath":"/addons/xmlapi/"
                 }
              }
             

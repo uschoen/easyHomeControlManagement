@@ -22,3 +22,30 @@ class ccu3xmlEXC(Exception):
         super(ccu3xmlEXC, self).__init__(msg)
         self.msg = msg
         LOG.critical(msg,exc_info=tracback)
+        
+class ccu3EXC(Exception):
+    '''
+    
+    '''
+    def __init__(self, msg="unkown error occured",tracback=False):
+        super(ccu3EXC, self).__init__(msg)
+        self.msg = msg
+        LOG.critical(msg,exc_info=tracback)   
+
+class ccu3RPCserverEXC(Exception):
+    '''
+    
+    '''
+    def __init__(self, msg="unkown error occured",tracback=False):
+        super(ccu3RPCserverEXC, self).__init__(msg)
+        self.msg = msg
+        LOG.critical(msg,exc_info=tracback)       
+        
+class ccu3RPCEXC(Exception):
+    '''
+    
+    '''
+    def __init__(self, msg="unkown error occured",tracback=False):
+        super(ccu3RPCEXC, self).__init__(msg)
+        self.msg = msg
+        LOG.critical(msg,exc_info=tracback)       
