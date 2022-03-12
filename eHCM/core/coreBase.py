@@ -56,6 +56,22 @@ class coreBase():
         except:
             LOG.error("some error in thisMethode")
     
+    def ifPortFree(self,port: int) -> bool:
+        '''
+            check if the network port free on this host
+            
+            port: int portnumber to check
+            
+            return true/false
+            
+            exception: defaultEXC
+        '''
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                return s.connect_ex(('localhost', port)) == 0 
+        except:
+            raise defaultEXC("unkown error in %s"%(self.thisMethode()),True)
+    
     def getLocalIP(self):
         """
         get the local ip back
