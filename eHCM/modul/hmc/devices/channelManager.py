@@ -117,9 +117,36 @@ class channelManager():
         except (Exception) as e:
             LOG.error("can't restore channel %s for deviceID:%s msg:%s"%(channelName,self.deviceID,e))
     
+    def updateChannels(self,channels={}):
+        '''
+            update channels
+        '''
+        try:
+            
+            for channelName in channels:
+                try:
+                    if channelName in self.channels:
+                        self.__updateChannel(channelName, channels[channelName])
+                    else:
+                        self.__addChannel(channelName, channels[channelName])
+                except:
+                    LOG.critical("can't update channel %s"%(channelName))
+        except:
+            raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
+    
     def __updateChannel(self,
-                        channelName,
-                        channelCFG):
+                      channelName,
+                      channelCFG):
+        '''
+            update a channel
+        
+            channelName: var, nahme of the channel
+            channelCFG:  dict, configuration of the channel
+            
+            return: nothing
+            
+            exception: none
+        '''
         try:
             LOG.debug("update channel %s for deviceID:%s"%(channelName,self.deviceID))
             self.channels[channelName].updateChannel(channelCFG)

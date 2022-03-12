@@ -63,7 +63,7 @@ class eventManager(object):
                 
                 self.events[eventName].updateCallers(eventCFG.get('callers',{}))
             else:
-                LOG.error("nat't find event name %s in deviceID %s"%(eventName,self.deviceID))
+                LOG.error("can't find event name %s in deviceID %s"%(eventName,self.deviceID))
         except:
             eventError("can't update event %s for device ID:%s"%(eventName,self.deviceID),True) 
       

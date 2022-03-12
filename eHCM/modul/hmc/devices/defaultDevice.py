@@ -24,6 +24,7 @@ DEFAULT_CONFIGURATION_FILE={'parameter':{},
 
 # Local library imports
 from core.manager import manager as coreManager
+from core.events.exception import eventError
 from core.exception import defaultEXC
 from .exception import deviceEXC
 from .defaultBase import deviceBase
@@ -150,23 +151,34 @@ class defaultDevice(deviceBase,channelManager,eventManager):
         except (Exception) as e:
             raise defaultEXC("some error in getConfiguration MSG:%s"%(format(e)))
         
-    def updateDevice(self,devicesCFG={}):
+    def updateDevice(self,deviceCFG={}):
         '''
-            update a device 
+            update a Core connector
+            
+            deviceCFG:    dict with device configuraition
+        
+            return: nothing
+            
+            exception: deviceEXC 
         
         '''
         try:
-            pass
             '''
                 device update parameter
             '''
-        
+            self.parameter.update(deviceCFG.get('parameter',{}))
+            self.parameter['CFGVersion']=__version__
             ''' 
                 device events  
             '''
+            self.updateEvents(deviceCFG.get('events',{}))
         
             '''
                 channels update
             '''
+            self.updateChannels(deviceCFG.get('channels',{}))
+        
+        except (eventError) as e:
+            raise deviceEXC("error in events, error:%s"%(e))
         except:
             raise deviceEXC("unkown error in %s"%(self.core.thisMethode()),True)

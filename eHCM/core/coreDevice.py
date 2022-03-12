@@ -17,6 +17,7 @@ from datetime import datetime
 
 # Local application imports
 from .exception import defaultEXC,coreDeviceEXC
+from modul.hmc.devices.exception import deviceEXC
 
 DEVICE_BASE_PATH="modul"      #device base path
 DEFAULT_DEVICE_PACKGAE="hmc"             #default device packgae
@@ -55,7 +56,7 @@ class coreDevices():
     
     def updateDevice(self,objectID,deviceCFG={},forceUpdate=False):
         '''
-            update a Core connector
+            update device
             
             objectID:      core objectID
             deviceCFG:    dict with device configuraition
@@ -68,8 +69,10 @@ class coreDevices():
         if objectID not in self.devices:
             raise coreDeviceEXC("device %s not exists"%(objectID))
         try:
-            self.devices[objectID].updateDevice
+            self.devices[objectID].updateDevice(deviceCFG)
             self.updateRemoteCore(forceUpdate,objectID,self.thisMethode(),objectID,deviceCFG)
+        except (deviceEXC) as e:
+            raise coreDeviceEXC("can't update device %s : error: %s"%(objectID,e))
         except:
             raise coreDeviceEXC("unkown error in %s"%(self.thisMethode()),True)
          
