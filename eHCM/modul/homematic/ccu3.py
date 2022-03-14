@@ -30,6 +30,7 @@ import threading
 import time 
 from xmlrpc.server import SimpleXMLRPCServer           #@UnresolvedImport
 from xmlrpc.server import SimpleXMLRPCRequestHandler   #@UnresolvedImport @UnusedImport
+import xmlrpc.client 
 import random
 
 # Local application imports
@@ -111,6 +112,7 @@ class ccu3(ccu3XML,ccu3RPCComands,defaultModul):
         '''
            build rpc Server
         '''
+        self.__rpcServer={}
         for serverName in self.config['rpc']:
             '''
             build server
@@ -118,8 +120,9 @@ class ccu3(ccu3XML,ccu3RPCComands,defaultModul):
             self.__rpcServer[serverName]={"instance":None,
                                           "blockTime":0,
                                           "interfaceID":"int%s"%(random.randint(1,9999)),
-                                          "rpcPort":False
-                                          }
+                                          "rpcPort":False}
+            
+          
             LOG.info("build rpc server %s"%(serverName))
      
         """
@@ -148,21 +151,24 @@ class ccu3(ccu3XML,ccu3RPCComands,defaultModul):
                             update ccu3 devices over xml interface
                         '''
                         if self.__lastCCU3update<int(time.time()):
-                            self.__updateCoreDevices()
+                            pass
+                            #self.__updateCoreDevices()
                         '''
                             start rpc server
                         '''
                         self.__checkRPCServer()
-                        
+                        LOG.debug("rpc Finish")
                                 
                         
                         time.sleep(1)
                     
-                    
+                    except(ccu3EXC) as e:
+                        self.__blockModul()
+                        time.sleep(1)
                     except:
                         self.__blockModul()
                         LOG.critical("unkown error in rpc server %s"%(self.config['objectID']), exc_info=True)  
-                       
+                        time.sleep(1)
                   
                 LOG.warning("ccu3 modul is stop")
                     
@@ -180,11 +186,11 @@ class ccu3(ccu3XML,ccu3RPCComands,defaultModul):
         '''
         try:
             for serverName in self.__rpcServer:
-                if not self.__rpcServer['blockTime']>int(time.time()):
+                if not self.__rpcServer[serverName]['blockTime']>int(time.time()):
                     '''
                         rpc Server not block
                     '''
-                    if not self.__rpcServer['instance']:
+                    if not self.__rpcServer[serverName]['instance']:
                         '''
                             start rpc server
                         '''
@@ -193,6 +199,7 @@ class ccu3(ccu3XML,ccu3RPCComands,defaultModul):
                         except (ccu3EXC) as e:
                             LOG.critical("can't start rpc server %s, error:%s"%(serverName,e))
                             self.__blockRPCServer(serverName)
+                LOG.debug("finish for server %s"%(serverName))
         except:
             raise ccu3EXC("unkown error in %s"%(self.core.thisMethode()),True)
             
@@ -208,11 +215,11 @@ class ccu3(ccu3XML,ccu3RPCComands,defaultModul):
         try:
             rpcIP=self.core.getLocalIP()
             rpcPort=self.__getFreeRPCPort(serverName)
-            LOG.info("start rpc server %s:%s"%(rpcIP,rpcPort))
+            LOG.info("start local rpc server %s:%s"%("10.90.12.190",9000))
             '''
                 build rpc server instance
             '''
-            rpcServerInstance= SimpleXMLRPCServer((rpcIP,int(rpcPort)))
+            rpcServerInstance= SimpleXMLRPCServer(("10.90.12.190",9000))
             rpcServerInstance.logRequests=False
             rpcServerInstance.register_introspection_functions() 
             rpcServerInstance.register_multicall_functions() 
@@ -224,7 +231,19 @@ class ccu3(ccu3XML,ccu3RPCComands,defaultModul):
             '''
                 send ccu3 init request
             '''
-            self.rpcInitStart(self.config['ccu3IP'],self.config['rpc'][serverName],self.__rpcServer[serverName]['interfaceID'])
+            #self.rpcInitStart(self.config['ccu3IP'],self.config['rpc'][serverName],self.__rpcServer[serverName]['interfaceID'],rpcIP,rpcPort,self.__rpcServer[serverName]['rpcProxy'])
+            url="http://%s:%i"%("10.90.12.190",9000),
+            interfaceID="u7767"
+            hmIP="10.90.12.90"
+            hmPort=2001
+            try:
+                proxy=xmlrpc.client.ServerProxy("http://%s:%i" %(hmIP, hmPort),verbose=True,)
+                data=proxy.init("http://%s:%i" %(rpcIP, rpcPort), interfaceID)
+                
+            except xmlrpc.client.Fault as err:
+                print("A fault occurred")
+                print("Fault code: %d" % err.faultCode)
+                print("Fault string: %s" % err.faultString)
         except (ccu3RPCEXC,ccu3RPCserverEXC) as e:
             raise ccu3EXC("can't send rpc start request %s"%(e))
         except:  
@@ -239,16 +258,23 @@ class ccu3(ccu3XML,ccu3RPCComands,defaultModul):
             exception: ccu3EXC
         '''
         try:
+            rpcIP=self.core.getLocalIP()
+            rpcPort= self.__rpcServer[serverName]['rpcPort']
             LOG.info("block %s for %s sec rpc server %s "%([serverName],self.config["blockRPCServer"]))
+            self.rpcInitStop(self.config['ccu3IP'],self.config['rpc'][serverName],rpcIP,rpcPort)
+            
             self.__rpcServer[serverName]={ 'blockTime':int(time.time())+self.config["blockRPCServer"],
                                            'instance':None,
                                            'rpcPort':False
                                          }
-            self.rpcInitStop(self.config['ccu3IP'],self.config['rpc'][serverName])
+            
         except (ccu3RPCEXC)as e:
             raise ccu3EXC("some error in RPC connection %s"%(e))
         except:
             raise ccu3EXC("unkown error in %s"%(self.core.thisMethode()),True)
+    
+    def resetAllTimer(self):
+        pass
         
     def __blockModul(self):
         LOG.info("block ccu3 modul % sec"%(self.config["blockModul"]))
@@ -280,6 +306,43 @@ class ccu3(ccu3XML,ccu3RPCComands,defaultModul):
         except:
             raise defaultEXC("unkown error in %s"%(self.core.thisMethode()),True)
            
+    def __stopAllRPCServer(self):
+        '''
+            stopp all rpc server
+        '''
+        try:
+            for serverName in self.__rpcServer:
+                self.__stopRPCServer(serverName)
+        except:
+            raise ccu3EXC("unkown error in %s"%(self.core.thisMethode()),True)
+    
+    def __stopRPCServer(self,serverName):
+        '''
+            stop a RPC Server
+            
+            serverName: Server to stop
+            
+            exception: ccu3EXC
+        '''
+        try:
+            LOG.warning("stopping rpc Server %s"%(serverName))
+            rpcIP=self.core.getLocalIP()
+            rpcPort= self.__rpcServer[serverName]['rpcPort']
+            #self.rpcInitStop(self.config['ccu3IP'],self.config['rpc'][serverName],rpcIP,rpcPort,self.__rpcServer[serverName]['rpcProxy'])
+            url="http://%s:%s"%("10.90.12.190",9000)
+            rpcProxy=xmlrpc.client.ServerProxy("http://10.90.12.90:2001",verbose=False)
+            rpcProxy.init(url)
+            '''
+                delete RPC Server
+            '''
+            del(self.__rpcServer[serverName])
+        except (ccu3RPCComands) as e:
+            del(self.__rpcServer[serverName])
+            raise ccu3EXC("error in ccu3RPCCOommand, error: %s"%(e))
+        except:
+            del(self.__rpcServer[serverName])
+            raise ccu3EXC("unkown error in %s"%(self.core.thisMethode()),True)
+    
     def stopModul(self):
         """
         stop modul
@@ -287,6 +350,8 @@ class ccu3(ccu3XML,ccu3RPCComands,defaultModul):
         exceptione: defaultEXC
         """
         try:
+            LOG.warning("stopping ccu3 modul")
+            self.__stopAllRPCServer()
             defaultModul.stopModul(self)
         except:
             raise defaultEXC("unkown error in ccu3 at stopModul",True)

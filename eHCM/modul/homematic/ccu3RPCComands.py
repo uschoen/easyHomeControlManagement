@@ -100,9 +100,11 @@ class ccu3RPCComands(defaultModul):
       
           
     def rpcInitStart(self,
-                      rpcIP,
-                      rpcPort,
-                      interface_id
+                      ccu3IP,
+                      ccu3Port,
+                      interface_id,
+                      remoteIP,
+                      remotePort,xmlProxy
                       ):
         '''
         send a init Request to get data from the CCU3
@@ -115,21 +117,25 @@ class ccu3RPCComands(defaultModul):
         exception: defaultEXC
         '''
         try:
-            url="http://%s:%s"%(rpcIP,rpcPort)
-            LOG.info("send a RPC  INIT request to RPC Server %s ID:%s" %(url,interface_id))
-            self.__getXMLProxy().init(url,interface_id)
-            LOG.debug("send a RPC INIT Request finish")
+            url="http://%s:%s"%(remoteIP,remotePort)
+            LOG.info("send a  INIT start request to ccu3 %s:%s for rpc callback %s ID:%s" %(ccu3IP,ccu3Port,url,interface_id))
+            #xmlProxy=xmlrpc.client.ServerProxy("http://%s:%s" %(ccu3IP,ccu3Port))
+            #self.__getXMLProxy(ccu3IP,ccu3Port).init(url,interface_id)
+            r=xmlProxy.init(url,interface_id)
+            LOG.debug("send a RPC INIT strat request finish %s"%(r))
         except xmlrpc.client.Fault as err:
             LOG.critical("xmlrpc: Exception: %s" % str(err))
             LOG.critical("xmlrpc request Fault code: %d" % err.faultCode)
             LOG.critical("xmlrpc request Fault string: %s" % err.faultString)
             raise ccu3RPCEXC("can't send rpc start request %s"%(self.config["objectID"]))
         except:
-            raise ccu3RPCEXC("can't send a start INIT request %s"%(self.config["objectID"]),True)
+            raise ccu3RPCEXC("can't send a start INIT start request %s"%(self.config["objectID"]),True)
     
     def rpcInitStop(self,
-                 rpcIP,
-                 rpcPort):
+                 ccu3IP,
+                 ccu3Port,
+                 remoteIP,
+                 remotePort,xmlProxy):
         '''
         send a init Request to stop data from the CCU3
         
@@ -139,14 +145,18 @@ class ccu3RPCComands(defaultModul):
         exception: defaultEXC
         '''
         try:
-            LOG.info("send a RPC stop  INIT for RPC Server %s:%s" %(rpcIP,rpcPort))
-            self.__getXMLProxy().init("http://%s:%s"%(rpcIP,int(rpcPort)))
+            url="http://%s:%s"%(remoteIP,remotePort)
+            LOG.info("send  INIT stop for RPC ccu3 %s:%s to for remote: %s" %(ccu3IP,ccu3Port,url))
+            #xmlProxy=xmlrpc.client.ServerProxy("http://%s:%s" %(ccu3IP,ccu3Port))
+            #self.__getXMLProxy(ccu3IP,ccu3Port).init(url)
+            r=xmlProxy.init(url)
+            LOG.debug("send a RPC INIT stop request finish %s"%(r))
         except xmlrpc.client.Fault as err:
             LOG.critical("xmlrpc: Exception: %s" % str(err))
             LOG.critical("xmlrpc request Fault code: %d" % err.faultCode)
             LOG.critical("xmlrpc request Fault string: %s" % err.faultString)
         except:
-            LOG.critical("can't send a stop INIT request %s"%(self.config["objectID"]),exc_info=True)   
+            LOG.critical("can't send a INIT stop request %s"%(self.config["objectID"]),exc_info=True)   
     
     def getDevices(self):   
         """

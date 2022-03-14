@@ -11,7 +11,7 @@ Homematic CCU3 ports
 
 
 """
-__version__='0.9'
+__version__='0.91'
 __author__ = 'ullrich schoen'
 
 # Standard library imports
@@ -30,6 +30,7 @@ class ccu3RPCServer(defaultModul):
     classdocs
     '''
     def __init__(self,cfg,ccu3):
+        print("start rpc Server init")
         """
         init
         """
@@ -48,8 +49,8 @@ class ccu3RPCServer(defaultModul):
         
         
 
-        LOG.debug("init new ccu3RPCrequest version %s"%(__version__))
-        
+        LOG.debug("init new ccu3 rpc server version %s"%(__version__))
+        print("finish rpc Server init")
         
     def event(self,interfaceID,channelName,ChannelType,value):
         """
